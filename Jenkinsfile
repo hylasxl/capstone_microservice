@@ -12,13 +12,14 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/hylasxl/capstone_microservice'
             }
         }
-        stage('Build  Docker Image') {
-            steps {
-                script {
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+        stage('Build Docker Image') {
+                    steps {
+                        script {
+                            // Change to the gateway directory and build the image
+                            sh 'cd gateway && docker build -t vietpham18/capstone_gateway:latest .'
+                        }
+                    }
                 }
-            }
-        }
 
         stage('Push  to Docker Hub') {
             steps {
