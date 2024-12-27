@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+option go_package = "./user_service";
+
+package user;
+
+service UserService {
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc Signup (SignupRequest) returns (SignupResponse);
+  rpc CheckExistingUsername (CheckExistingUsernameRequest) returns (CheckExistingUsernameResponse);
+  rpc CheckExistingEmail (CheckExistingEmailRequest) returns (CheckExistingEmailResponse);
+  rpc CheckExistingPhone (CheckExistingPhoneRequest) returns (CheckExistingPhoneResponse);
+  rpc CheckValidUser (CheckValidUserRequest) returns (CheckValidUserResponse);
+  rpc GetListAccountDisplayInfo (GetListAccountDisplayInfoRequest) returns (GetListAccountDisplayInfoResponse);
+  rpc GetAccountInfo (GetAccountInfoRequest) returns (GetAccountInfoResponse);
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string userId = 1;
+  string roleId = 2;
+  string error = 3;
+}
+
+
+message SignupRequest {
+  string firstName = 1;
+  string lastName = 2;
+  int64 birthday = 3;
+  string gender = 4;
+  string email = 5;
+  string password = 6;
+  string username = 7;
+  string phoneNumber = 8;
+  bytes avatar = 9;
+}
+
+message SignupResponse {
+  string error = 1;
+  string accountId = 2;
+}
+
+message CheckExistingUsernameRequest {
+  string username = 1;
+}
+
+message CheckExistingUsernameResponse {
+  bool isExisting = 1;
+}
+
+message CheckExistingEmailRequest {
+  string email = 1;
+}
+
+message CheckExistingEmailResponse{
+  bool isExisting = 1;
+}
+
+message CheckExistingPhoneRequest {
+  string phone = 1;
+}
+
+message CheckExistingPhoneResponse{
+  bool isExisting = 1;
+}
+
+message CheckValidUserRequest {
+  string userId = 1;
+}
+
+message CheckValidUserResponse {
+  bool isValid = 1;
+}
+
+message GetListAccountDisplayInfoRequest {
+  repeated uint64 IDs = 1;
+}
+
+message GetListAccountDisplayInfoResponse {
+  repeated SingleDisplayInfo Infos = 1;
+  string Error = 2;
+}
+
+message SingleDisplayInfo {
+  uint64 AccountID = 1;
+  string DisplayName = 2;
+  string AvatarURL = 3;
+}
+
+message GetAccountInfoRequest {
+  uint32 AccountID = 1;
+}
+
+message GetAccountInfoResponse {
+  uint32 AccountID = 1;
+  Account Account = 2;
+  AccountInfo AccountInfo = 3;
+  Avatar AccountAvatar = 4;
+  string Error = 5;
+}
+
+message Account {
+  string Username = 1;
+  uint32 RoleID = 2;
+  string CreateMethod = 3;
+  bool IsBanned = 4;
+  bool IsRestricted = 5;
+  bool IsSelfDeleted = 6;
+}
+
+message AccountInfo {
+  string FirstName = 1;
+  string LastName = 2;
+  int64 DateOfBirth = 3;
+  string Gender = 4;
+  string MaterialStatus = 5;
+  string PhoneNumber = 6;
+  string Email = 7;
+  string NameDisplayType = 8;
+}
+
+message Avatar {
+  uint32 ID = 1;
+  string AvatarURL = 2;
+  bool IsInUse = 3;
+  bool IsDeleted = 4;
+}
+

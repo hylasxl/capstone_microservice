@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+option go_package = "./auth_service";
+
+package auth;
+
+service AuthService {
+  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc CheckPermission (CheckPermissionRequest) returns (CheckPermissionResponse);
+  rpc GetPermissions (GetPermissionsRequest) returns (GetPermissionsResponse);
+  rpc GenerateTokens (GenerateTokensRequest) returns (GenerateTokensResponse);
+}
+
+message JWTClaims {
+  string accountId = 1;
+  repeated string permissions = 2;
+  string roleId = 3;
+  string issuer = 4;
+  string subject = 5;
+  string audience = 6;
+}
+
+message GenerateTokensRequest {
+  JWTClaims claims = 1;
+}
+
+message GenerateTokensResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+  string error = 3;
+}
+
+message ValidateTokenRequest {
+  string Token = 1;
+}
+
+message ValidateTokenResponse {
+  bool Valid = 1;
+  string UserId = 2;
+  string RoleId = 3;
+  repeated string Permissions = 4;
+  string error_message = 5;
+}
+
+message CheckPermissionRequest {
+  string UserId = 1;
+}
+
+message CheckPermissionResponse {
+  bool isAuthorized = 1;
+  string error_message = 2;
+}
+
+message GetPermissionsRequest{
+  string roleId = 1;
+}
+
+message GetPermissionsResponse{
+  repeated string url = 1;
+  string error = 2;
+}
+

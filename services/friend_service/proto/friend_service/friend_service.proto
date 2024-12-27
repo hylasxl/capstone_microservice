@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+option go_package = "./friend_service";
+
+package friend;
+
+service FriendService {
+  rpc SendFriend (SendFriendRequest) returns (SendFriendResponse);
+  rpc ResolveFriendFollow (FriendFollowResolveRequest) returns (FriendFollowResolveResponse);
+  rpc ResolveFriendBlock (FriendBlockResolveRequest) returns (FriendBlockResolveResponse);
+  rpc GetListFriend (GetListFriendRequest) returns (GetListFriendResponse);
+  rpc GetPendingList (GetPendingListRequest) returns (GetPendingListResponse);
+  rpc Unfriend (UnfriendRequest) returns (UnfriendResponse);
+  rpc ResolveFriendRequest (FriendListResolveRequest) returns (FriendListResolveResponse);
+  rpc RecallFriendRequest (RecallRequest) returns (RecallResponse);
+  rpc CountPending (CountPendingRequest) returns (CountPendingResponse);
+  rpc CheckIsFriend (CheckIsFriendRequest) returns (CheckIsFriendResponse);
+  rpc CheckIsBlock (CheckIsBlockedRequest) returns (CheckIsBlockedResponse);
+}
+
+message SendFriendRequest {
+  string FromAccountID = 1;
+  string ToAccountID = 2;
+}
+
+message SendFriendResponse {
+  bool Success = 1;
+  string Error = 2;
+}
+
+message FriendFollowResolveRequest {
+  string FromAccountID = 1;
+  string ToAccountID = 2;
+  string action = 3;
+}
+
+message FriendFollowResolveResponse {
+  bool Success = 1;
+  string Error = 2;
+}
+
+message FriendBlockResolveRequest {
+  string FromAccountID = 1;
+  string ToAccountID = 2;
+  string action = 3;
+}
+
+message FriendBlockResolveResponse {
+  bool Success = 1;
+  string Error = 2;
+}
+
+message GetListFriendRequest {
+  string AccountID = 1;
+}
+
+message GetListFriendResponse {
+  repeated string ListFriendIDs = 1;
+  string error = 2;
+}
+
+message GetPendingListRequest {
+  string AccountID = 1;
+  int64 Page = 2;
+}
+
+message GetPendingListResponse {
+  repeated PendingData ListPending = 1;
+  string error = 2;
+  int64 Page = 3;
+}
+
+message PendingData {
+  uint64 AccountID = 1;
+  uint64 RequestID = 2;
+  int64 CreatedAt = 3;
+  int64 MutualFriends = 4;
+}
+
+message UnfriendRequest {
+  string FromAccountID = 1;
+  string ToAccountID = 2;
+}
+
+message UnfriendResponse {
+  bool Success = 1;
+  string Error = 2;
+}
+
+message FriendListResolveRequest {
+  uint64 ReceiverID = 1;
+  uint64 RequestID = 2;
+  string action = 3;
+}
+
+message FriendListResolveResponse {
+  bool Success = 1;
+  string Error = 2;
+}
+
+message RecallRequest {
+  uint64 SenderID = 1;
+  uint64 RequestID = 2;
+}
+
+message RecallResponse {
+  bool Success = 1;
+  string Error = 2;
+}
+message CountPendingRequest {
+  uint32 AccountID = 1;
+}
+
+message CountPendingResponse {
+  int32 Quantity = 1;
+}
+
+message CheckIsFriendRequest {
+  uint64 FirstAccountID = 1;
+  uint64 SecondAccountID = 2;
+}
+
+message CheckIsFriendResponse {
+  bool IsFriend = 1;
+  string Error = 2;
+}
+
+message CheckIsBlockedRequest {
+  uint64 FirstAccountID = 1;
+  uint64 SecondAccountID = 2;
+}
+
+message CheckIsBlockedResponse {
+  bool IsBlocked = 1;
+  string Error = 2;
+}

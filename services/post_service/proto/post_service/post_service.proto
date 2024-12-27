@@ -1,0 +1,406 @@
+syntax = "proto3";
+
+option go_package = "./post_service";
+
+package post;
+
+service PostService {
+  rpc CreateNewPost (CreatePostRequest) returns (CreatePostResponse);
+  rpc UploadPostImage (UploadImageRequest) returns (UploadImageResponse);
+  rpc SharePost (SharePostRequest) returns (SharePostResponse);
+  rpc CommentPost (CommentPostRequest) returns (CommentPostResponse);
+  rpc GetSinglePost (GetSinglePostRequest) returns (GetSinglePostResponse); //NOT IMPLEMENTED
+  rpc EditPost (EditPostRequest) returns (EditPostResponse); // NOT IMPLEMENTED
+  rpc DeletePost (DeletePostRequest) returns (DeletePostResponse);
+  rpc ReplyComment (ReplyCommentRequest) returns (ReplyCommentResponse);
+  rpc EditComment (EditCommentRequest) returns (EditCommentResponse);
+  rpc DeleteComment (DeleteCommentRequest) returns (DeleteCommentResponse);
+  rpc DeletePostImage (DeletePostImageRequest) returns (DeletePostImageResponse);
+  rpc ReactPost (ReactPostRequest) returns (ReactPostResponse);
+  rpc RemoveReactPost (RemoveReactPostRequest) returns (RemoveReactPostResponse);
+  rpc ReactImage (ReactImageRequest) returns (ReactImageResponse);
+  rpc RemoveReactImage (RemoveReactImageRequest) returns (RemoveReactImageResponse);
+  rpc CommentImage (CommentImageRequest) returns (CommentImageResponse);
+  rpc ReplyCommentImage (ReplyCommentImageRequest) returns (ReplyCommentImageResponse);
+  rpc EditCommentImage (EditCommentImageRequest) returns (EditCommentImageResponse);
+  rpc DeleteCommentImage (DeleteCommentImageRequest) returns (DeleteCommentImageResponse);
+  rpc CountPostComment (CountPostCommentRequest) returns (CountPostCommentResponse);
+  rpc CountPostReaction (CountPostReactionRequest) returns (CountPostReactionResponse);
+  rpc CountPostShare (CountPostShareRequest) returns (CountPostShareResponse);
+  rpc GetPostComment (GetPostCommentRequest) returns (GetPostCommentResponse);
+  rpc GetPostReaction (GetPostReactionRequest) returns (GetPostReactionResponse);
+  rpc GetPostMediaComment(GetPostMediaCommentRequest) returns (GetPostMediaCommentResponse);
+  rpc GetWallPostList (GetWallPostListRequest) returns (GetWallPostListResponse);
+}
+
+message CreatePostRequest {
+  uint64 AccountID = 1;
+  string Content = 2;
+  bool IsPublishedLater = 3;
+  int64 PublishedLateTimestamp = 4;
+  string PrivacyStatus = 5;
+  repeated string TagAccountIDs = 6;
+}
+
+message MultiMediaMessage {
+  string MediaType = 1;
+  string UploadStatus = 2;
+  bytes Media = 3;
+  string Content = 4;
+}
+
+
+message CreatePostResponse {
+  uint64 PostID = 1;
+  string Error = 2;
+}
+
+message UploadImageRequest {
+  repeated MultiMediaMessage Medias = 1;
+  uint64 PostID = 2;
+}
+
+message UploadImageResponse {
+  repeated string MediaURLs = 1;
+  string Error = 2;
+}
+
+message SharePostRequest {
+  uint64 AccountID = 1;
+  string Content = 2;
+  bool IsShared = 3;
+  uint64 OriginalPostID = 4;
+  string PrivacyStatus = 5;
+  repeated string TagAccountIDs = 6;
+}
+
+message SharePostResponse {
+  uint64 PostID = 1;
+  string Error = 2;
+}
+
+message CommentPostRequest {
+  uint64 AccountID = 1;
+  uint64 PostID = 2;
+  string Content = 3;
+}
+
+message CommentPostResponse {
+  string Error = 1;
+}
+
+message GetSinglePostRequest {
+  uint64 PostID = 1;
+}
+
+message GetSinglePostResponse {
+  uint64 PostID = 1;
+  string Content = 2;
+  string PrivacyStatus = 3;
+  repeated MediaDisplay Medias = 4;
+  uint64 TotalCommentNumber = 5;
+  uint64 TotalReactionNumber = 6;
+  uint64 TotalShareNumber = 7;
+  string Error = 8;
+}
+
+message EditPostRequest {
+  uint64 PostID = 1;
+  string Content = 2;
+  string PrivacyStatus = 3;
+}
+
+message EditPostResponse {
+  uint64 PostID = 1;
+  string Error = 2;
+}
+
+message DeletePostRequest {
+  uint64 PostID = 1;
+}
+
+message DeletePostResponse {
+  uint64 PostID = 1;
+  string Error = 2;
+}
+
+message ReplyCommentRequest {
+  uint64 OriginalCommentID = 1;
+  uint64 PostID = 2;
+  string ReplyContent = 3;
+  uint32 AccountID = 4;
+}
+
+message ReplyCommentResponse {
+  uint64 ReplyCommentID = 1;
+  string Error = 2;
+}
+
+message EditCommentRequest {
+  uint64 CommentID = 1;
+  string Content = 2;
+}
+
+message EditCommentResponse {
+  uint64 CommentID = 1;
+  string Error = 2;
+}
+
+message DeleteCommentRequest {
+  uint64 CommentID = 1;
+}
+
+message DeleteCommentResponse {
+  string Error = 1;
+}
+
+message DeletePostImageRequest {
+  uint64 PostID = 1;
+  uint64 MediaID = 2;
+}
+
+message DeletePostImageResponse {
+  string Error = 1;
+}
+
+message ReactPostRequest {
+  uint64 PostID = 1;
+  uint64 AccountID = 2;
+  string ReactType = 3;
+}
+
+message ReactPostResponse {
+  string Error = 1;
+}
+
+message RemoveReactPostRequest {
+  uint64 PostID = 1;
+  uint64 AccountID = 2;
+}
+
+message RemoveReactPostResponse {
+  string Error = 1;
+}
+
+message ReactImageRequest {
+  uint64 AccountID = 1;
+  uint64 MediaID = 2;
+  string ReactType = 3;
+}
+
+message ReactImageResponse {
+  string Error = 1;
+}
+
+message RemoveReactImageRequest {
+  uint64 MediaID = 1;
+  uint64 AccountID = 2;
+}
+
+message RemoveReactImageResponse {
+  string Error = 1;
+}
+
+message CommentImageRequest {
+  uint64 MediaID = 1;
+  uint64 AccountID = 2;
+  string Content = 3;
+}
+
+message CommentImageResponse {
+  uint64 CommentID = 1;
+  string Error = 2;
+}
+
+message ReplyCommentImageRequest {
+  uint64 MediaID = 1;
+  uint64 AccountID = 2;
+  string Content = 3;
+  int64 CommentLevel = 4;
+  uint64 OriginalCommentID = 5;
+}
+
+message ReplyCommentImageResponse {
+  string Error = 1;
+}
+
+message EditCommentImageRequest {
+  uint64 CommentID = 1;
+  uint64 AccountID = 2;
+  string Content = 3;
+}
+
+message EditCommentImageResponse {
+  string Error = 1;
+}
+
+message DeleteCommentImageRequest {
+  uint64 CommentID = 1;
+  uint64 AccountID = 2;
+  uint64 MediaID = 3;
+}
+
+message DeleteCommentImageResponse {
+  string Error = 1;
+}
+
+message CountPostCommentRequest {
+  uint64 PostID = 1;
+}
+
+message CountPostCommentResponse {
+  int64 CommentQuantity = 1;
+  string Error = 2;
+}
+
+message CountPostReactionRequest {
+  uint64 PostID = 1;
+}
+
+message CountPostReactionResponse {
+  int64 ReactionQuantity = 1;
+  string Error = 2;
+}
+
+message CountPostShareRequest {
+  uint64 PostID = 1;
+}
+
+message CountPostShareResponse {
+  int64 ShareQuantity = 1;
+  string Error = 2;
+}
+
+message GetPostCommentRequest {
+  uint64 PostID = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+}
+
+message Comment {
+  uint64 CommentID = 1;
+  uint64 AccountID = 2;
+  string Content = 3;
+  bool IsEdited = 6;
+  uint64 ReplyFromID = 7;
+  uint32 Level = 8;
+  repeated Comment Replies = 9;
+}
+
+message GetPostCommentResponse {
+  uint64 PostID = 1;
+  repeated Comment Comments = 2;
+  uint32 TotalComments = 3;
+  string Error = 4;
+}
+
+message GetPostReactionRequest {
+  uint64 PostID = 1;
+}
+
+message GetPostReactionResponse {
+  repeated ReactionDisplay Reactions = 1;
+  string Error = 2;
+}
+
+message CommentDisplay {
+  string Content = 1;
+  uint64 AccountID = 2;
+  int64 CreatedAt = 3;
+}
+
+message ShareDisplay {
+  uint64 AccountID = 1;
+  int64 CreatedAt = 2;
+}
+
+message MediaDisplay {
+  string URL = 1;
+  string Content = 2;
+  uint64 TotalCommentNumber = 3;
+  uint64 TotalReactionNumber = 4;
+  uint64 MediaID = 5;
+}
+
+message ReactionDisplay {
+  string ReactionType = 1;
+  uint64 AccountID = 2;
+}
+
+message GetPostMediaCommentRequest {
+  uint64 PostMediaID = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+}
+
+message MediaComment {
+  uint64 CommentID = 1;
+  uint64 AccountID = 2;
+  string Content = 3;
+  bool IsEdited = 4;
+  uint64 ReplyFromID = 5;
+  uint32 Level = 6;
+  repeated MediaComment Replies = 7;
+}
+
+message GetPostMediaCommentResponse {
+  uint64 PostMediaID = 1;
+  repeated MediaComment Comments = 2;
+  uint32 TotalComments = 3;
+  string Error = 4;
+}
+
+message GetWallPostListRequest {
+  uint64 TargetAccountID = 1;
+  uint64 RequestAccountID = 2;
+  uint32 Page = 3;
+  uint32 PageSize = 4;
+  bool IsAccountBlockedEachOther = 5;
+  bool IsFriend = 6;
+}
+
+message GetWallPostListResponse {
+  uint64 TargetAccountID = 1;
+  uint32 Page = 2;
+  repeated DisplayPost Posts = 3;
+  string Error = 4;
+}
+
+message DisplayPost {
+  uint64 PostID = 1;
+  string Content = 2;
+  bool IsShared = 3;
+  uint64 SharePostID = 4;
+  DisplayPost SharePostData = 5;
+  bool IsSelfDeleted = 6;
+  bool IsDeletedByAdmin = 7;
+  bool IsHidden = 8;
+  bool IsContentEdited = 9;
+  string PrivacyStatus = 10;
+  PostReactions Reactions = 11;
+  PostComments Comments = 12;
+  PostShares Shares = 13;
+  string InteractionType = 14;
+  repeated MediaDisplay Medias = 15;
+  int64 CreatedAt = 16;
+  bool IsPublishedLater = 17;
+  int64 PublishedLaterTimestamp = 18;
+  bool IsPublished = 19;
+  string Error = 20;
+  uint64 AccountID = 21;
+}
+
+message PostReactions {
+  uint32 Count = 1;
+  repeated ReactionDisplay DisplayData = 2;
+}
+
+message PostComments {
+  uint32 Count = 1;
+  repeated CommentDisplay DisplayData = 2;
+}
+
+message PostShares {
+  uint32 Count = 1;
+  repeated ShareDisplay DisplayData = 2;
+}

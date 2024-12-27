@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "./moderation_service";
+
+package moderation;
+
+service ModerationService {
+  rpc IdentifyAndReplaceText (IdentifyAndReplaceTextRequest) returns (IdentifyAndReplaceTextResponse);
+}
+
+message IdentifyAndReplaceTextRequest {
+  string Content = 1;
+}
+
+message IdentifyAndReplaceTextResponse {
+  string ReturnedContent = 1;
+  string Error = 2;
+}

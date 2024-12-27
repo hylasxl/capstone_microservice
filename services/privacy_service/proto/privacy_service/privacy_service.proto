@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "./privacy_service";
+
+package privacy;
+
+service PrivacyService{
+    rpc CreateAccountPrivacyInit (CreateAccountPrivacyInitRequest) returns (CreateAccountPrivacyInitResponse);
+}
+
+message CreateAccountPrivacyInitRequest {
+  string AccountID = 1;
+}
+
+message CreateAccountPrivacyInitResponse {
+  bool success = 1;
+  string error = 2;
+}
