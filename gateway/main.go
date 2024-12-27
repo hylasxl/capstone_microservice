@@ -33,7 +33,7 @@ func main() {
 	// Determine port from environment or use default
 	port := os.Getenv("GATEWAY_PORT")
 	if port == "" {
-		port = "8080"
+		port = "8081"
 	}
 
 	// Start the server

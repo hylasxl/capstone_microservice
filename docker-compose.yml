@@ -19,10 +19,11 @@ services:
 #      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
 
   gateway:
+    image: vietpham18/capstone_gateway:1.0.0
     build:
       context: ./gateway
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
       - auth_service
       - user_service
@@ -38,7 +39,7 @@ services:
     networks:
       - network
     environment:
-      GATEWAY_PORT: 8080
+      GATEWAY_PORT: 8081
 
   auth_service:
     build:
