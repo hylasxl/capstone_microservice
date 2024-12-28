@@ -29,7 +29,7 @@ WORKDIR /root/
 COPY --from=build /app/api_gateway .
 
 # Expose port 50051 for the gRPC service
-EXPOSE 8080
+EXPOSE 8081
 
 # Command to run the executable
 CMD ["./api_gateway"]

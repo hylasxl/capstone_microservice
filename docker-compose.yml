@@ -1,4 +1,4 @@
-version: '3.8'
+
 services:
 #  zookeeper:
 #    image: confluentinc/cp-zookeeper:latest
@@ -19,7 +19,6 @@ services:
 #      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
 
   gateway:
-    image: vietpham18/capstone_gateway:1.0.0
     build:
       context: ./gateway
     ports:
