@@ -19,6 +19,7 @@ services:
 #      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
 
   gateway:
+    image: vietpham18/capstone_gateway
     build:
       context: ./gateway
     ports:
