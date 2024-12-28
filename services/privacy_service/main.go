@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	lis, err := net.Listen("tcp", ":50071")
+	lis, err := net.Listen("tcp", ":52000")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -32,7 +32,7 @@ func main() {
 		log.Fatalf("failed to auto migrate: %v", err)
 	}
 
-	log.Println("Privacy service started on port 50071")
+	log.Println("Privacy service started on port 52000")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

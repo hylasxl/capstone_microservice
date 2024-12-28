@@ -29,7 +29,7 @@ WORKDIR /root/
 COPY --from=build /app/post_service .
 
 # Expose port 50051 for the gRPC service
-EXPOSE 50070
+EXPOSE 51000
 
 # Command to run the executable
 CMD ["./post_service"]
