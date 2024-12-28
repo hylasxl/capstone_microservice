@@ -393,7 +393,7 @@ services:
     build:
       context: ./services/post_service
     ports:
-      - "50060:50060"
+      - "50070:50070"
     networks:
       - network
     environment:
@@ -434,7 +434,7 @@ services:
     build:
       context: ./services/privacy_service
     ports:
-      - "50061:50061"
+      - "50071:50071"
     networks:
       - network
     environment:

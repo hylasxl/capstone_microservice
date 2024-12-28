@@ -29,7 +29,7 @@ WORKDIR /root/
 COPY --from=build /app/privacy_service .
 
 # Expose port 50051 for the gRPC service
-EXPOSE 50061
+EXPOSE 50071
 
 # Command to run the executable
 CMD ["./privacy_service"]

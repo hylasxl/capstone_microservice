@@ -24,7 +24,7 @@ func main() {
 		return
 	}
 	time.Local = time.FixedZone("UTC+7", 7*3600)
-	lis, err := net.Listen("tcp", ":50060")
+	lis, err := net.Listen("tcp", ":50070")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -55,7 +55,7 @@ func main() {
 		log.Fatalf("failed to auto migrate: %v", err)
 	}
 
-	log.Println("Post service started on port 50060")
+	log.Println("Post service started on port 50070")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
