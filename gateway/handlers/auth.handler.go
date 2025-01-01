@@ -126,19 +126,20 @@ func HandlerSignUp(userClient user_service.UserServiceClient, privacyClient priv
 			Birthday:    birthDate.Unix(),
 			Avatar:      imgBytes,
 		})
-		if singUpResp.Error != "" {
-			log.Printf("Error during user signup: %v", singUpResp.Error)
-			respondWithError(w, http.StatusBadRequest, "Signup failed: "+singUpResp.Error, nil)
+
+		if err != nil {
+			log.Printf("Error during user signup: %v", err)
+			respondWithError(w, http.StatusBadRequest, "Signup failed: "+singUpResp.Error, err)
 			return
 		}
 
-		privacyInitResp, err := privacyClient.CreateAccountPrivacyInit(ctx, &privacy_service.CreateAccountPrivacyInitRequest{
+		_, err = privacyClient.CreateAccountPrivacyInit(ctx, &privacy_service.CreateAccountPrivacyInitRequest{
 			AccountID: singUpResp.AccountId,
 		})
-		if privacyInitResp.Error != "" {
+		if err != nil {
 			log.Printf("Error initializing privacy: %v", err)
-			log.Printf("CreateAccountPrivacyInit failed with error: %v", privacyInitResp.Error)
-			respondWithError(w, http.StatusBadRequest, "CreateAccountPrivacyInit failed: "+privacyInitResp.Error, nil)
+			log.Printf("CreateAccountPrivacyInit failed with error: %v", err)
+			respondWithError(w, http.StatusBadRequest, "CreateAccountPrivacyInit failed: "+err.Error(), nil)
 			return
 		}
 

@@ -121,6 +121,7 @@ message AccountInfo {
   string PhoneNumber = 6;
   string Email = 7;
   string NameDisplayType = 8;
+  string Bio = 9;
 }
 
 message Avatar {

@@ -27,7 +27,6 @@ const (
 	UserService_CheckValidUser_FullMethodName            = "/user.UserService/CheckValidUser"
 	UserService_GetListAccountDisplayInfo_FullMethodName = "/user.UserService/GetListAccountDisplayInfo"
 	UserService_GetAccountInfo_FullMethodName            = "/user.UserService/GetAccountInfo"
-	UserService_CountPending_FullMethodName              = "/user.UserService/CountPending"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -42,7 +41,6 @@ type UserServiceClient interface {
 	CheckValidUser(ctx context.Context, in *CheckValidUserRequest, opts ...grpc.CallOption) (*CheckValidUserResponse, error)
 	GetListAccountDisplayInfo(ctx context.Context, in *GetListAccountDisplayInfoRequest, opts ...grpc.CallOption) (*GetListAccountDisplayInfoResponse, error)
 	GetAccountInfo(ctx context.Context, in *GetAccountInfoRequest, opts ...grpc.CallOption) (*GetAccountInfoResponse, error)
-	CountPending(ctx context.Context, in *CountPendingRequest, opts ...grpc.CallOption) (*CheckValidUserResponse, error)
 }
 
 type userServiceClient struct {
@@ -133,16 +131,6 @@ func (c *userServiceClient) GetAccountInfo(ctx context.Context, in *GetAccountIn
 	return out, nil
 }
 
-func (c *userServiceClient) CountPending(ctx context.Context, in *CountPendingRequest, opts ...grpc.CallOption) (*CheckValidUserResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CheckValidUserResponse)
-	err := c.cc.Invoke(ctx, UserService_CountPending_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -155,7 +143,6 @@ type UserServiceServer interface {
 	CheckValidUser(context.Context, *CheckValidUserRequest) (*CheckValidUserResponse, error)
 	GetListAccountDisplayInfo(context.Context, *GetListAccountDisplayInfoRequest) (*GetListAccountDisplayInfoResponse, error)
 	GetAccountInfo(context.Context, *GetAccountInfoRequest) (*GetAccountInfoResponse, error)
-	CountPending(context.Context, *CountPendingRequest) (*CheckValidUserResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -189,9 +176,6 @@ func (UnimplementedUserServiceServer) GetListAccountDisplayInfo(context.Context,
 }
 func (UnimplementedUserServiceServer) GetAccountInfo(context.Context, *GetAccountInfoRequest) (*GetAccountInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAccountInfo not implemented")
-}
-func (UnimplementedUserServiceServer) CountPending(context.Context, *CountPendingRequest) (*CheckValidUserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CountPending not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -358,24 +342,6 @@ func _UserService_GetAccountInfo_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_CountPending_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CountPendingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).CountPending(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_CountPending_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).CountPending(ctx, req.(*CountPendingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -414,10 +380,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAccountInfo",
 			Handler:    _UserService_GetAccountInfo_Handler,
-		},
-		{
-			MethodName: "CountPending",
-			Handler:    _UserService_CountPending_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

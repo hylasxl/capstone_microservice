@@ -17,5 +17,6 @@ type AccountInfo struct {
 	PhoneNumber     string    `gorm:"unique; default: null"`
 	Email           string    `gorm:"not null; unique"`
 	NameDisplayType string    `gorm:"type:ENUM('first_name_first','last_name_first');not null;default:'first_name_first'"`
+	Bio             string    `gorm:"type:text;default:null"`
 	Account         Account   `gorm:"foreignkey:AccountID"`
 }

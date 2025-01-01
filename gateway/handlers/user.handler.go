@@ -142,6 +142,7 @@ func HandlerGetAccountInfo(userClient user_service.UserServiceClient) http.Handl
 			PhoneNumber:     userResp.AccountInfo.PhoneNumber,
 			Email:           userResp.AccountInfo.Email,
 			NameDisplayType: userResp.AccountInfo.NameDisplayType,
+			Bio:             userResp.AccountInfo.Bio,
 		}
 
 		var accountAvatar = &AccountAvatar{

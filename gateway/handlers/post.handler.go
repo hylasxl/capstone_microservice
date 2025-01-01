@@ -279,6 +279,7 @@ func HandlerCommentPost(postClient post_service.PostServiceClient, userClient us
 		}
 
 		response.Success = true
+		response.CommentID = commentResp.CommentID
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -346,6 +347,7 @@ func HandlerReplyComment(postClient post_service.PostServiceClient, userClient u
 		}
 
 		response.Success = true
+		response.CommentID = int64(commentResp.ReplyCommentID)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(response); err != nil {

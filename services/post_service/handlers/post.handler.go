@@ -300,7 +300,9 @@ func (s *PostService) CommentPost(ctx context.Context, in *ps.CommentPostRequest
 		return &ps.CommentPostResponse{Error: errMsg}, err
 	}
 
-	return &ps.CommentPostResponse{}, nil
+	return &ps.CommentPostResponse{
+		CommentID: int64(commentData.ID),
+	}, nil
 }
 
 func (s *PostService) DeletePost(ctx context.Context, in *ps.DeletePostRequest) (*ps.DeletePostResponse, error) {
@@ -578,7 +580,6 @@ func (s *PostService) DeletePostImage(ctx context.Context, in *ps.DeletePostImag
 
 	return &ps.DeletePostImageResponse{}, nil
 }
-
 func (s *PostService) ReactPost(ctx context.Context, in *ps.ReactPostRequest) (*ps.ReactPostResponse, error) {
 	if in.PostID <= 0 {
 		return &ps.ReactPostResponse{Error: "Invalid PostID"}, nil
@@ -586,7 +587,6 @@ func (s *PostService) ReactPost(ctx context.Context, in *ps.ReactPostRequest) (*
 	if in.AccountID <= 0 {
 		return &ps.ReactPostResponse{Error: "Invalid AccountID"}, nil
 	}
-
 	isValidReaction := false
 	for _, reaction := range validReactions {
 		if in.ReactType == reaction {
@@ -600,24 +600,51 @@ func (s *PostService) ReactPost(ctx context.Context, in *ps.ReactPostRequest) (*
 	}
 
 	tx := s.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+	defer tx.Rollback()
 
-	var reactionData = &models.PostReaction{
-		PostID:       uint(in.PostID),
-		AccountID:    uint(in.AccountID),
-		ReactionType: in.ReactType,
-	}
+	var existingReact models.PostReaction
 
-	if err := tx.Create(&reactionData).Error; err != nil {
-		tx.Rollback()
-		errMsg := fmt.Sprintf("Failed to create reaction: %v", err)
-		log.Println(errMsg)
-		return &ps.ReactPostResponse{Error: errMsg}, err
+	err := tx.Model(&models.PostReaction{}).
+		Where("post_id = ? AND account_id = ?", in.PostID, in.AccountID).
+		First(&existingReact).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// Create a new reaction
+		newReaction := models.PostReaction{
+			PostID:       uint(in.PostID),
+			AccountID:    uint(in.AccountID),
+			ReactionType: in.ReactType,
+		}
+		if err := tx.Create(&newReaction).Error; err != nil {
+			log.Printf("Failed to create new reaction: %v", err)
+			return &ps.ReactPostResponse{Error: err.Error()}, nil
+		}
+	} else if err != nil {
+		log.Printf("Failed to fetch existing reaction: %v", err)
+		return &ps.ReactPostResponse{Error: err.Error()}, nil
+	} else {
+		// Update the existing reaction
+		updates := map[string]interface{}{"reaction_type": in.ReactType}
+		if existingReact.IsRecalled {
+			updates["is_recalled"] = false
+		}
+		if err := tx.Model(&existingReact).
+			Where("id = ?", existingReact.ID).
+			Updates(updates).Error; err != nil {
+			log.Printf("Failed to update existing reaction: %v", err)
+			return &ps.ReactPostResponse{Error: err.Error()}, nil
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		errMsg := fmt.Sprintf("Transaction commit failed: %v", err)
-		log.Println(errMsg)
-		return &ps.ReactPostResponse{Error: errMsg}, err
+		log.Printf("Transaction commit failed: %v", err)
+		return &ps.ReactPostResponse{Error: "Transaction commit failed"}, nil
 	}
 
 	return &ps.ReactPostResponse{}, nil

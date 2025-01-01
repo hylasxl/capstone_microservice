@@ -324,6 +324,7 @@ func (svc *UserService) GetAccountInfo(ctx context.Context, in *user_service.Get
 			MaterialStatus:  accountInfo.MaritalStatus,
 			PhoneNumber:     accountInfo.PhoneNumber,
 			NameDisplayType: accountInfo.NameDisplayType,
+			Bio:             accountInfo.Bio,
 		}
 	}
 

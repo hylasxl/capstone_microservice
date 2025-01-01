@@ -13,7 +13,6 @@ service UserService {
   rpc CheckValidUser (CheckValidUserRequest) returns (CheckValidUserResponse);
   rpc GetListAccountDisplayInfo (GetListAccountDisplayInfoRequest) returns (GetListAccountDisplayInfoResponse);
   rpc GetAccountInfo (GetAccountInfoRequest) returns (GetAccountInfoResponse);
-  rpc CountPending (CountPendingRequest) returns (CheckValidUserResponse);
 }
 
 message LoginRequest {
@@ -122,6 +121,7 @@ message AccountInfo {
   string PhoneNumber = 6;
   string Email = 7;
   string NameDisplayType = 8;
+  string Bio = 9;
 }
 
 message Avatar {
@@ -129,13 +129,5 @@ message Avatar {
   string AvatarURL = 2;
   bool IsInUse = 3;
   bool IsDeleted = 4;
-}
-
-message CountPendingRequest {
-  uint32 AccountID = 1;
-}
-
-message CountPendingResponse {
-  int32 Quantity = 1;
 }
 

@@ -87,6 +87,7 @@ message CommentPostRequest {
 
 message CommentPostResponse {
   string Error = 1;
+  int64 CommentID = 2;
 }
 
 message GetSinglePostRequest {

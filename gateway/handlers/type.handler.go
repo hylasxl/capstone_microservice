@@ -185,8 +185,9 @@ type CommentPostRequest struct {
 }
 
 type CommentPostResponse struct {
-	Error   string `json:"error"`
-	Success bool   `json:"success"`
+	Error     string `json:"error"`
+	CommentID int64  `json:"comment_id"`
+	Success   bool   `json:"success"`
 }
 
 type ReplyCommentRequest struct {
@@ -197,8 +198,9 @@ type ReplyCommentRequest struct {
 }
 
 type ReplyCommentResponse struct {
-	Error   string `json:"error"`
-	Success bool   `json:"success"`
+	CommentID int64  `json:"comment_id"`
+	Error     string `json:"error"`
+	Success   bool   `json:"success"`
 }
 
 type GetSinglePostRequest struct {
@@ -387,6 +389,7 @@ type AccountInfo struct {
 	PhoneNumber     string `json:"phone_number"`
 	Email           string `json:"email"`
 	NameDisplayType string `json:"name_display_type"`
+	Bio             string `json:"bio"`
 }
 
 type AccountAvatar struct {
