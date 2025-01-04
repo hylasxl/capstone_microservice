@@ -30,6 +30,9 @@ const (
 	FriendService_CountPending_FullMethodName         = "/friend.FriendService/CountPending"
 	FriendService_CheckIsFriend_FullMethodName        = "/friend.FriendService/CheckIsFriend"
 	FriendService_CheckIsBlock_FullMethodName         = "/friend.FriendService/CheckIsBlock"
+	FriendService_CheckIsFollow_FullMethodName        = "/friend.FriendService/CheckIsFollow"
+	FriendService_GetUserInteraction_FullMethodName   = "/friend.FriendService/GetUserInteraction"
+	FriendService_CheckExistingRequest_FullMethodName = "/friend.FriendService/CheckExistingRequest"
 )
 
 // FriendServiceClient is the client API for FriendService service.
@@ -47,6 +50,9 @@ type FriendServiceClient interface {
 	CountPending(ctx context.Context, in *CountPendingRequest, opts ...grpc.CallOption) (*CountPendingResponse, error)
 	CheckIsFriend(ctx context.Context, in *CheckIsFriendRequest, opts ...grpc.CallOption) (*CheckIsFriendResponse, error)
 	CheckIsBlock(ctx context.Context, in *CheckIsBlockedRequest, opts ...grpc.CallOption) (*CheckIsBlockedResponse, error)
+	CheckIsFollow(ctx context.Context, in *CheckIsFollowRequest, opts ...grpc.CallOption) (*CheckIsFollowResponse, error)
+	GetUserInteraction(ctx context.Context, in *GetUserInteractionRequest, opts ...grpc.CallOption) (*GetUserInteractionResponse, error)
+	CheckExistingRequest(ctx context.Context, in *CheckExistingRequestRequest, opts ...grpc.CallOption) (*CheckExistingRequestResponse, error)
 }
 
 type friendServiceClient struct {
@@ -167,6 +173,36 @@ func (c *friendServiceClient) CheckIsBlock(ctx context.Context, in *CheckIsBlock
 	return out, nil
 }
 
+func (c *friendServiceClient) CheckIsFollow(ctx context.Context, in *CheckIsFollowRequest, opts ...grpc.CallOption) (*CheckIsFollowResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckIsFollowResponse)
+	err := c.cc.Invoke(ctx, FriendService_CheckIsFollow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *friendServiceClient) GetUserInteraction(ctx context.Context, in *GetUserInteractionRequest, opts ...grpc.CallOption) (*GetUserInteractionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUserInteractionResponse)
+	err := c.cc.Invoke(ctx, FriendService_GetUserInteraction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *friendServiceClient) CheckExistingRequest(ctx context.Context, in *CheckExistingRequestRequest, opts ...grpc.CallOption) (*CheckExistingRequestResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckExistingRequestResponse)
+	err := c.cc.Invoke(ctx, FriendService_CheckExistingRequest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FriendServiceServer is the server API for FriendService service.
 // All implementations must embed UnimplementedFriendServiceServer
 // for forward compatibility.
@@ -182,6 +218,9 @@ type FriendServiceServer interface {
 	CountPending(context.Context, *CountPendingRequest) (*CountPendingResponse, error)
 	CheckIsFriend(context.Context, *CheckIsFriendRequest) (*CheckIsFriendResponse, error)
 	CheckIsBlock(context.Context, *CheckIsBlockedRequest) (*CheckIsBlockedResponse, error)
+	CheckIsFollow(context.Context, *CheckIsFollowRequest) (*CheckIsFollowResponse, error)
+	GetUserInteraction(context.Context, *GetUserInteractionRequest) (*GetUserInteractionResponse, error)
+	CheckExistingRequest(context.Context, *CheckExistingRequestRequest) (*CheckExistingRequestResponse, error)
 	mustEmbedUnimplementedFriendServiceServer()
 }
 
@@ -224,6 +263,15 @@ func (UnimplementedFriendServiceServer) CheckIsFriend(context.Context, *CheckIsF
 }
 func (UnimplementedFriendServiceServer) CheckIsBlock(context.Context, *CheckIsBlockedRequest) (*CheckIsBlockedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckIsBlock not implemented")
+}
+func (UnimplementedFriendServiceServer) CheckIsFollow(context.Context, *CheckIsFollowRequest) (*CheckIsFollowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckIsFollow not implemented")
+}
+func (UnimplementedFriendServiceServer) GetUserInteraction(context.Context, *GetUserInteractionRequest) (*GetUserInteractionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserInteraction not implemented")
+}
+func (UnimplementedFriendServiceServer) CheckExistingRequest(context.Context, *CheckExistingRequestRequest) (*CheckExistingRequestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckExistingRequest not implemented")
 }
 func (UnimplementedFriendServiceServer) mustEmbedUnimplementedFriendServiceServer() {}
 func (UnimplementedFriendServiceServer) testEmbeddedByValue()                       {}
@@ -444,6 +492,60 @@ func _FriendService_CheckIsBlock_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FriendService_CheckIsFollow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckIsFollowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).CheckIsFollow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_CheckIsFollow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).CheckIsFollow(ctx, req.(*CheckIsFollowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FriendService_GetUserInteraction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserInteractionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).GetUserInteraction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_GetUserInteraction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).GetUserInteraction(ctx, req.(*GetUserInteractionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FriendService_CheckExistingRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckExistingRequestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).CheckExistingRequest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_CheckExistingRequest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).CheckExistingRequest(ctx, req.(*CheckExistingRequestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FriendService_ServiceDesc is the grpc.ServiceDesc for FriendService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -494,6 +596,18 @@ var FriendService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckIsBlock",
 			Handler:    _FriendService_CheckIsBlock_Handler,
+		},
+		{
+			MethodName: "CheckIsFollow",
+			Handler:    _FriendService_CheckIsFollow_Handler,
+		},
+		{
+			MethodName: "GetUserInteraction",
+			Handler:    _FriendService_GetUserInteraction_Handler,
+		},
+		{
+			MethodName: "CheckExistingRequest",
+			Handler:    _FriendService_CheckExistingRequest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

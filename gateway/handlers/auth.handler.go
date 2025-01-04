@@ -18,6 +18,7 @@ func HandlerLogin(authClient auth_service.AuthServiceClient, userClient user_ser
 		var request LoginRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			return
 		}
 
 		if request.Username == "" || request.Password == "" {

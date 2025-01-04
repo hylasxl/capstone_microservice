@@ -11,6 +11,7 @@ func InitializePostRoutes(router *mux.Router, clients *ServiceClients) {
 	postRoutes.HandleFunc("/get-post-by-id", handlers.HandlerGetSinglePost(clients.PostService, clients.UserService)).Methods("GET")
 	postRoutes.HandleFunc("/get-post-comments", handlers.HandlerGetPostComments(clients.PostService)).Methods("GET")
 	postRoutes.HandleFunc("/get-wall-posts", handlers.HandlerGetWallPost(clients.PostService, clients.UserService, clients.FriendService)).Methods("GET")
+	postRoutes.HandleFunc("/get-new-feeds", handlers.HandlerGetNewFeeds(clients.PostService, clients.UserService, clients.FriendService)).Methods("GET")
 
 	postRoutes.HandleFunc("/create-new-post", handlers.HandlerCreatePost(clients.PostService, clients.UserService, clients.ModerationService)).Methods("POST")
 	postRoutes.HandleFunc("/share-post", handlers.HandlerSharePost(clients.PostService, clients.UserService, clients.ModerationService)).Methods("POST")

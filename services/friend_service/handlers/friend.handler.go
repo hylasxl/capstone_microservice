@@ -7,6 +7,7 @@ import (
 	"friend_service/models"
 	"friend_service/proto/friend_service"
 	"gorm.io/gorm"
+	"sort"
 	"strconv"
 )
 
@@ -82,7 +83,8 @@ func (svc *FriendService) SendFriend(ctx context.Context, in *friend_service.Sen
 	tx.Commit()
 
 	return &friend_service.SendFriendResponse{
-		Success: true,
+		Success:   true,
+		RequestID: uint64(newRequest.ID),
 	}, nil
 }
 
@@ -716,6 +718,8 @@ func (svc *FriendService) GetListFriend(ctx context.Context, in *friend_service.
 		responseFriends[i] = fmt.Sprintf("%d", id)
 	}
 
+	tx.Commit()
+
 	return &friend_service.GetListFriendResponse{
 		ListFriendIDs: responseFriends,
 	}, nil
@@ -795,10 +799,140 @@ func (svc *FriendService) CheckIsBlock(ctx context.Context, in *friend_service.C
 				IsBlocked: false,
 			}, nil
 		}
-		return nil, err
+		return &friend_service.CheckIsBlockedResponse{
+			IsBlocked: true,
+		}, nil
 	}
 
 	return &friend_service.CheckIsBlockedResponse{
 		IsBlocked: true,
+	}, nil
+}
+
+func (svc *FriendService) CheckIsFollow(ctx context.Context, in *friend_service.CheckIsFollowRequest) (*friend_service.CheckIsFollowResponse, error) {
+	if in.FromAccountID == 0 || in.ToAccountID == 0 {
+		return &friend_service.CheckIsFollowResponse{
+			Error: "Invalid account IDs",
+		}, errors.New("invalid account IDs")
+	}
+
+	var friendFollow models.FriendFollow
+	if err := svc.DB.Model(models.FriendFollow{}).Where("first_account_id = ? AND second_account_id = ?", in.FromAccountID, in.ToAccountID).Error; err != nil {
+		return &friend_service.CheckIsFollowResponse{
+			IsFollow: false,
+		}, nil
+	}
+
+	return &friend_service.CheckIsFollowResponse{
+		IsFollow: friendFollow.IsFollowed,
+	}, nil
+}
+func (svc *FriendService) GetUserInteraction(ctx context.Context, in *friend_service.GetUserInteractionRequest) (*friend_service.GetUserInteractionResponse, error) {
+	var interactions []*friend_service.InteractionScore
+
+	// Query all the users the account (in.AccountID) could have interactions with
+	var allUsers []models.FriendList
+	err := svc.DB.WithContext(ctx).Where("first_account_id = ? OR second_account_id = ?", in.AccountID, in.AccountID).Find(&allUsers).Error
+	if err != nil {
+
+	}
+
+	// Map to track processed users and their interaction score
+	processedUsers := make(map[uint64]bool)
+
+	// Iterate over all users to calculate the interaction score
+	for _, interaction := range allUsers {
+		var targetAccountID uint
+		// Determine the target account ID (the other user in the interaction)
+		if uint64(interaction.FirstAccountID) == in.AccountID {
+			targetAccountID = interaction.SecondAccountID
+		} else {
+			targetAccountID = interaction.FirstAccountID
+		}
+
+		// Skip if this target account has already been processed
+		if processedUsers[uint64(targetAccountID)] {
+			continue
+		}
+		processedUsers[uint64(targetAccountID)] = true
+
+		score := int64(0)
+
+		var blockStatus models.FriendBlock
+		err := svc.DB.WithContext(ctx).Where("(first_account_id = ? AND second_account_id = ?) OR (second_account_id = ? AND first_account_id = ?)", in.AccountID, targetAccountID, targetAccountID, in.AccountID).First(&blockStatus).Error
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			blockStatus.IsBlocked = false
+		}
+
+		if blockStatus.IsBlocked {
+			score = -10000
+			continue
+		} else {
+			var followStatus models.FriendFollow
+			err := svc.DB.WithContext(ctx).Where("first_account_id = ? AND second_account_id = ? AND is_followed = ?", in.AccountID, targetAccountID, true).First(&followStatus).Error
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					followStatus.IsFollowed = false
+					continue
+				}
+				return nil, err
+			}
+
+			if !followStatus.IsFollowed {
+				score = -10000
+			} else {
+				score += 200
+				var friendStatus models.FriendList
+				err := svc.DB.WithContext(ctx).Where("(first_account_id = ? AND second_account_id = ?) OR (first_account_id = ? AND second_account_id = ?)", in.AccountID, targetAccountID, targetAccountID, in.AccountID).First(&friendStatus).Error
+				if err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+					} else {
+						return nil, err
+					}
+				}
+
+				if friendStatus.IsValid {
+					score += 100
+				}
+			}
+		}
+
+		if score > 0 {
+			interactions = append(interactions, &friend_service.InteractionScore{
+				AccountID: uint64(targetAccountID),
+				Score:     uint64(score),
+			})
+		}
+	}
+
+	sort.Slice(interactions, func(i, j int) bool {
+		return interactions[i].Score > interactions[j].Score
+	})
+
+	return &friend_service.GetUserInteractionResponse{
+		Interactions: interactions,
+	}, nil
+}
+
+func (svc *FriendService) CheckExistingRequest(ctx context.Context, in *friend_service.CheckExistingRequestRequest) (*friend_service.CheckExistingRequestResponse, error) {
+	if in.ToAccountID <= 0 || in.FromAccountID <= 0 {
+		return nil, errors.New("invalid account IDs")
+	}
+
+	var request models.FriendListRequest
+	if err := svc.DB.Model(request).Where("sender_account_id = ? AND receiver_account_id = ? AND is_recalled = ? AND request_status = ?", in.FromAccountID, in.ToAccountID, false, "pending").First(&request).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &friend_service.CheckExistingRequestResponse{
+				IsExisting: false,
+				RequestID:  0,
+			}, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	return &friend_service.CheckExistingRequestResponse{
+		IsExisting: true,
+		RequestID:  uint64(request.ID),
 	}, nil
 }

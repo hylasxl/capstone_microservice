@@ -6,6 +6,8 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"os"
+	"time"
 	"user_service/configs"
 	"user_service/handlers"
 	"user_service/models"
@@ -14,6 +16,11 @@ import (
 
 func main() {
 	ctx := context.Background()
+	err := os.Setenv("TZ", "Asia/Bangkok")
+	if err != nil {
+		return
+	}
+	time.Local = time.FixedZone("UTC+7", 7*3600)
 	lis, err := net.Listen("tcp", ":50052")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

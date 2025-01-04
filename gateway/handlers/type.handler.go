@@ -46,8 +46,9 @@ type SendFriendRequest struct {
 }
 
 type SendFriendResponse struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error"`
+	Success   bool   `json:"success"`
+	Error     string `json:"error"`
+	RequestID int    `json:"request_id"`
 }
 
 type ResolveFriendRequest struct {
@@ -484,4 +485,83 @@ type PostShareDisplay struct {
 type PostShareData struct {
 	Account   SingleAccountInfo `json:"account"`
 	CreatedAt int64             `json:"created_at"`
+}
+
+type PrivacyIndices struct {
+	DateOfBirth    string `json:"date_of_birth"`
+	Gender         string `json:"gender"`
+	MaterialStatus string `json:"material_status"`
+	PhoneNumber    string `json:"phone_number"`
+	Email          string `json:"email"`
+	Bio            string `json:"bio"`
+}
+
+type GetProfileInfoRequest struct {
+	TargetAccountID  uint64 `json:"target_account_id"`
+	RequestAccountID uint64 `json:"request_account_id"`
+}
+type GetProfileInfoResponse struct {
+	AccountID      uint64         `json:"account_id"`
+	Account        Account        `json:"account"`
+	AccountInfo    AccountInfo    `json:"account_info"`
+	AccountAvatar  AccountAvatar  `json:"account_avatar"`
+	PrivacyIndices PrivacyIndices `json:"privacy_indices"`
+	IsFriend       bool           `json:"is_friend"`
+	IsBlocked      bool           `json:"is_blocked"`
+	IsFollowed     bool           `json:"is_followed"`
+	Timestamp      int64          `json:"timestamp"`
+}
+
+type GetNewFeedsRequest struct {
+	AccountID  uint64   `json:"account_id"`
+	SeenPostID []uint64 `json:"seen_post_id"`
+	Page       uint32   `json:"page"`
+	PageSize   uint32   `json:"page_size"`
+}
+
+type GetNewFeedsResponse struct {
+	AccountID uint64        `json:"account_id"`
+	Page      uint64        `json:"page"`
+	PageSize  uint64        `json:"page_size"`
+	Posts     []DisplayPost `json:"posts"`
+}
+
+type CheckExistingFriendRequestRequest struct {
+	FromAccountID uint64 `json:"from_account_id"`
+	ToAccountID   uint64 `json:"to_account_id"`
+}
+
+type CheckExistingFriendRequestResponse struct {
+	IsExisting bool   `json:"is_existing"`
+	RequestID  uint64 `json:"request_id"`
+}
+
+type RegisterDeviceRequest struct {
+	UserID uint64 `json:"user_id"`
+	Token  string `json:"token"`
+}
+
+type RegisterDeviceResponse struct {
+	Success bool `json:"success"`
+}
+
+type SingleSuccessResponse struct {
+	Success bool `json:"success"`
+}
+
+type SetPrivacyRequest struct {
+	AccountID     uint64 `json:"account_id"`
+	PrivacyIndex  uint64 `json:"privacy_index"`
+	PrivacyStatus string `json:"privacy_status"`
+}
+
+type ChangeAccountInfoRequest struct {
+	AccountID     uint64 `json:"account_id"`
+	Data          string `json:"data"`
+	DataFieldName string `json:"data_field_name"`
+}
+
+type ChangeAvatarRequest struct {
+	AccountID uint64 `json:"account_id"`
+	Avatar    string `json:"avatar"`
 }

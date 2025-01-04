@@ -45,6 +45,7 @@ const (
 	PostService_GetPostReaction_FullMethodName     = "/post.PostService/GetPostReaction"
 	PostService_GetPostMediaComment_FullMethodName = "/post.PostService/GetPostMediaComment"
 	PostService_GetWallPostList_FullMethodName     = "/post.PostService/GetWallPostList"
+	PostService_GetNewFeeds_FullMethodName         = "/post.PostService/GetNewFeeds"
 )
 
 // PostServiceClient is the client API for PostService service.
@@ -77,6 +78,7 @@ type PostServiceClient interface {
 	GetPostReaction(ctx context.Context, in *GetPostReactionRequest, opts ...grpc.CallOption) (*GetPostReactionResponse, error)
 	GetPostMediaComment(ctx context.Context, in *GetPostMediaCommentRequest, opts ...grpc.CallOption) (*GetPostMediaCommentResponse, error)
 	GetWallPostList(ctx context.Context, in *GetWallPostListRequest, opts ...grpc.CallOption) (*GetWallPostListResponse, error)
+	GetNewFeeds(ctx context.Context, in *GetNewFeedsRequest, opts ...grpc.CallOption) (*GetNewFeedsResponse, error)
 }
 
 type postServiceClient struct {
@@ -347,6 +349,16 @@ func (c *postServiceClient) GetWallPostList(ctx context.Context, in *GetWallPost
 	return out, nil
 }
 
+func (c *postServiceClient) GetNewFeeds(ctx context.Context, in *GetNewFeedsRequest, opts ...grpc.CallOption) (*GetNewFeedsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetNewFeedsResponse)
+	err := c.cc.Invoke(ctx, PostService_GetNewFeeds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PostServiceServer is the server API for PostService service.
 // All implementations must embed UnimplementedPostServiceServer
 // for forward compatibility.
@@ -377,6 +389,7 @@ type PostServiceServer interface {
 	GetPostReaction(context.Context, *GetPostReactionRequest) (*GetPostReactionResponse, error)
 	GetPostMediaComment(context.Context, *GetPostMediaCommentRequest) (*GetPostMediaCommentResponse, error)
 	GetWallPostList(context.Context, *GetWallPostListRequest) (*GetWallPostListResponse, error)
+	GetNewFeeds(context.Context, *GetNewFeedsRequest) (*GetNewFeedsResponse, error)
 	mustEmbedUnimplementedPostServiceServer()
 }
 
@@ -464,6 +477,9 @@ func (UnimplementedPostServiceServer) GetPostMediaComment(context.Context, *GetP
 }
 func (UnimplementedPostServiceServer) GetWallPostList(context.Context, *GetWallPostListRequest) (*GetWallPostListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetWallPostList not implemented")
+}
+func (UnimplementedPostServiceServer) GetNewFeeds(context.Context, *GetNewFeedsRequest) (*GetNewFeedsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNewFeeds not implemented")
 }
 func (UnimplementedPostServiceServer) mustEmbedUnimplementedPostServiceServer() {}
 func (UnimplementedPostServiceServer) testEmbeddedByValue()                     {}
@@ -954,6 +970,24 @@ func _PostService_GetWallPostList_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PostService_GetNewFeeds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNewFeedsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServiceServer).GetNewFeeds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PostService_GetNewFeeds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServiceServer).GetNewFeeds(ctx, req.(*GetNewFeedsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PostService_ServiceDesc is the grpc.ServiceDesc for PostService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1064,6 +1098,10 @@ var PostService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetWallPostList",
 			Handler:    _PostService_GetWallPostList_Handler,
+		},
+		{
+			MethodName: "GetNewFeeds",
+			Handler:    _PostService_GetNewFeeds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

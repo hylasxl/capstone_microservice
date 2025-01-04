@@ -16,6 +16,9 @@ service FriendService {
   rpc CountPending (CountPendingRequest) returns (CountPendingResponse);
   rpc CheckIsFriend (CheckIsFriendRequest) returns (CheckIsFriendResponse);
   rpc CheckIsBlock (CheckIsBlockedRequest) returns (CheckIsBlockedResponse);
+  rpc CheckIsFollow (CheckIsFollowRequest) returns (CheckIsFollowResponse);
+  rpc GetUserInteraction (GetUserInteractionRequest) returns (GetUserInteractionResponse);
+  rpc CheckExistingRequest (CheckExistingRequestRequest) returns (CheckExistingRequestResponse);
 }
 
 message SendFriendRequest {
@@ -26,6 +29,7 @@ message SendFriendRequest {
 message SendFriendResponse {
   bool Success = 1;
   string Error = 2;
+  uint64 RequestID = 3;
 }
 
 message FriendFollowResolveRequest {
@@ -133,4 +137,38 @@ message CheckIsBlockedRequest {
 message CheckIsBlockedResponse {
   bool IsBlocked = 1;
   string Error = 2;
+}
+
+message CheckIsFollowRequest {
+  uint32 FromAccountID = 1;
+  uint32 ToAccountID = 2;
+}
+
+message CheckIsFollowResponse {
+  bool IsFollow = 1;
+  string Error = 2;
+}
+
+
+message GetUserInteractionRequest {
+  uint64 AccountID = 1;
+}
+
+message GetUserInteractionResponse {
+  repeated InteractionScore Interactions = 1;
+}
+
+message InteractionScore {
+  uint64 AccountID = 1;
+  uint64 Score = 2;
+}
+
+message CheckExistingRequestRequest {
+  uint64 FromAccountID = 1;
+  uint64 ToAccountID = 2;
+}
+
+message CheckExistingRequestResponse {
+  bool IsExisting = 1;
+  uint64 RequestID = 2;
 }

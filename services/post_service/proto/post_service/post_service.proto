@@ -31,6 +31,7 @@ service PostService {
   rpc GetPostReaction (GetPostReactionRequest) returns (GetPostReactionResponse);
   rpc GetPostMediaComment(GetPostMediaCommentRequest) returns (GetPostMediaCommentResponse);
   rpc GetWallPostList (GetWallPostListRequest) returns (GetWallPostListResponse);
+  rpc GetNewFeeds (GetNewFeedsRequest) returns (GetNewFeedsResponse);
 }
 
 message CreatePostRequest {
@@ -404,4 +405,25 @@ message PostComments {
 message PostShares {
   uint32 Count = 1;
   repeated ShareDisplay DisplayData = 2;
+}
+
+message GetNewFeedsRequest {
+  uint64 AccountID = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+  repeated uint64 SeenPostIDs = 4;
+  repeated InteractionScore Interactions = 5;
+  repeated uint64 ListFriendIDs = 6;
+}
+
+message GetNewFeedsResponse {
+  uint64 AccountID = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+  repeated DisplayPost Posts = 4;
+}
+
+message InteractionScore {
+  uint64 AccountID = 1;
+  uint64 Score = 2;
 }

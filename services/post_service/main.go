@@ -50,7 +50,6 @@ func main() {
 		&models.PostMultiMediaReaction{},
 		&models.PostMultiMediaEditCommentHistory{},
 	)
-
 	if err != nil {
 		log.Fatalf("failed to auto migrate: %v", err)
 	}

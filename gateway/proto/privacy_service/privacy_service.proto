@@ -6,6 +6,8 @@ package privacy;
 
 service PrivacyService{
   rpc CreateAccountPrivacyInit (CreateAccountPrivacyInitRequest) returns (CreateAccountPrivacyInitResponse);
+  rpc GetPrivacy (GetPrivacyRequest) returns (GetPrivacyResponse);
+  rpc SetPrivacy (SetPrivacyRequest) returns (SetPrivacyResponse);
 }
 
 message CreateAccountPrivacyInitRequest {
@@ -15,4 +17,31 @@ message CreateAccountPrivacyInitRequest {
 message CreateAccountPrivacyInitResponse {
   bool success = 1;
   string error = 2;
+}
+
+message GetPrivacyRequest {
+  uint64 AccountID = 1;
+}
+
+message GetPrivacyResponse {
+  PrivacyIndices Privacy = 1;
+}
+
+message PrivacyIndices {
+  string DateOfBirth = 1;
+  string Gender = 2;
+  string MaterialStatus = 3;
+  string Phone = 4;
+  string Email = 5;
+  string Bio = 6;
+}
+
+message SetPrivacyRequest{
+  uint64 AccountID = 1;
+  uint32 PrivacyIndex = 2;
+  string PrivacyStatus = 3;
+}
+
+message SetPrivacyResponse{
+  bool Success = 1;
 }

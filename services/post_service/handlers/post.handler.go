@@ -8,6 +8,7 @@ import (
 	"log"
 	"post_service/models"
 	ps "post_service/proto/post_service"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -1441,20 +1442,16 @@ func (s *PostService) GetWallPostList(ctx context.Context, in *ps.GetWallPostLis
 					}).Find(&reactions).Error; err != nil {
 				}
 
-				fmt.Printf("Reactions retrieved: %+v\n", reactions)
-
 				if uint32(len(reactions)) > 0 {
 					postReaction.DisplayData = make([]*ps.ReactionDisplay, 0, len(reactions))
 					for _, reaction := range reactions {
-						fmt.Printf("Processing Reaction: %+v\n", reaction) // Debugging reaction data
 						postReaction.DisplayData = append(postReaction.DisplayData, &ps.ReactionDisplay{
 							ReactionType: reaction.ReactionType,
 							AccountID:    uint64(reaction.AccountID),
 						})
 					}
 					postReaction.Count = uint32(len(reactions))
-					fmt.Printf("Post Reaction Data: Count=%d, DisplayData=%+v\n",
-						postReaction.Count, postReaction.DisplayData)
+
 				}
 
 				var postShares []models.Post
@@ -1665,20 +1662,15 @@ func (s *PostService) GetWallPostList(ctx context.Context, in *ps.GetWallPostLis
 						}).Find(&reactions).Error; err != nil {
 					}
 
-					fmt.Printf("Reactions retrieved: %+v\n", reactions)
-
 					if uint32(len(reactions)) > 0 {
 						postReaction.DisplayData = make([]*ps.ReactionDisplay, 0, len(reactions))
 						for _, reaction := range reactions {
-							fmt.Printf("Processing Reaction: %+v\n", reaction) // Debugging reaction data
 							postReaction.DisplayData = append(postReaction.DisplayData, &ps.ReactionDisplay{
 								ReactionType: reaction.ReactionType,
 								AccountID:    uint64(reaction.AccountID),
 							})
 						}
 						postReaction.Count = uint32(len(reactions))
-						fmt.Printf("Post Reaction Data: Count=%d, DisplayData=%+v\n",
-							postReaction.Count, postReaction.DisplayData)
 					}
 
 					var postShares []models.Post
@@ -1891,12 +1883,9 @@ func (s *PostService) GetWallPostList(ctx context.Context, in *ps.GetWallPostLis
 						}).Find(&reactions).Error; err != nil {
 					}
 
-					fmt.Printf("Reactions retrieved: %+v\n", reactions)
-
 					if uint32(len(reactions)) > 0 {
 						postReaction.DisplayData = make([]*ps.ReactionDisplay, 0, len(reactions))
 						for _, reaction := range reactions {
-							fmt.Printf("Processing Reaction: %+v\n", reaction) // Debugging reaction data
 							postReaction.DisplayData = append(postReaction.DisplayData, &ps.ReactionDisplay{
 								ReactionType: reaction.ReactionType,
 								AccountID:    uint64(reaction.AccountID),
@@ -1991,4 +1980,379 @@ func (s *PostService) GetWallPostList(ctx context.Context, in *ps.GetWallPostLis
 		Page:            in.Page,
 		Posts:           returnedPost,
 	}, nil
+}
+
+// rankPostInteractions will rank posts based on their interactions (likes, comments, shares, etc.)
+func (s *PostService) rankPostInteractions(ctx context.Context) map[int]int {
+	// Step 1: Query all published posts
+	var posts []models.Post
+	err := s.DB.WithContext(ctx).
+		Where("is_deleted_by_admin = ? AND is_hidden = ? AND is_published = ?", false, false, true).
+		Find(&posts).Error
+	if err != nil {
+		fmt.Println("Error fetching posts:", err)
+		return nil
+	}
+
+	// Step 2: Prepare a map to hold scores
+	postScores := make(map[int]int) // Map[PostID]Score
+
+	// Step 3: Calculate scores for each post
+	for _, post := range posts {
+		score := 0
+
+		// Step 3.1: Calculate reactions score
+		var reactionsCount int64
+		err = s.DB.WithContext(ctx).
+			Model(&models.PostReaction{}).
+			Where("post_id = ? AND is_recalled = ?", post.ID, false).
+			Count(&reactionsCount).Error
+		if err != nil {
+			fmt.Println("Error counting reactions:", err)
+			continue
+		}
+		score += int(reactionsCount) * 10
+
+		// Step 3.2: Calculate comments score
+		var commentsCount int64
+		err = s.DB.WithContext(ctx).
+			Model(&models.PostComment{}).
+			Where("post_id = ? AND is_self_deleted = ?", post.ID, false).
+			Count(&commentsCount).Error
+		if err != nil {
+			fmt.Println("Error counting comments:", err)
+			continue
+		}
+		score += int(commentsCount) * 15
+
+		// Step 3.3: Calculate time decay factor
+		timeSincePublished := time.Now().Sub(post.CreatedAt).Seconds()
+		if timeSincePublished < 0 {
+			timeSincePublished = 0 // Clamp negative values
+		}
+		timeFactor := 10000 / (1 + timeSincePublished)
+		score += int(timeFactor)
+
+		// Step 3.4: Shared post bonus
+		if post.IsShared {
+			score += 10
+		}
+
+		// Add score to the map
+		postScores[int(post.ID)] = score
+	}
+
+	// Step 4: Return the map of post scores
+	return postScores
+}
+
+func (s *PostService) GetNewFeeds(ctx context.Context, in *ps.GetNewFeedsRequest) (*ps.GetNewFeedsResponse, error) {
+	if in.AccountID <= 0 {
+		return nil, errors.New("invalid account id")
+	}
+
+	if in.PageSize <= 0 {
+		in.PageSize = 10
+	}
+
+	seenPostMap := make(map[uint64]struct{}, len(in.SeenPostIDs))
+	for _, id := range in.SeenPostIDs {
+		seenPostMap[id] = struct{}{}
+	}
+
+	allRankingPost := s.rankPostInteractions(ctx)
+	interactions := in.Interactions
+	listFriendIds := in.ListFriendIDs
+
+	log.Printf("Original Array: %v", allRankingPost)
+
+	type postScore struct {
+		PostID uint
+		Score  int
+	}
+
+	var availablePosts []postScore
+	for postID, score := range allRankingPost {
+		if _, seen := seenPostMap[uint64(postID)]; !seen {
+			availablePosts = append(availablePosts, postScore{PostID: uint(postID), Score: score})
+		}
+	}
+
+	log.Printf("Sort Array By Seen: %v", availablePosts)
+
+	for i := 0; i < len(availablePosts); {
+		postID := availablePosts[i].PostID
+		var postData models.Post
+		if err := s.DB.Model(&models.Post{}).Where("id = ?", postID).First(&postData).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				availablePosts = append(availablePosts[:i], availablePosts[i+1:]...)
+				continue
+			} else {
+				return nil, err
+			}
+		}
+		score, found := getScoreByAccountID(interactions, uint64(postData.AccountID))
+		if found {
+			availablePosts[i].Score *= int(score)
+		}
+		i++
+	}
+
+	sort.Slice(availablePosts, func(i, j int) bool {
+		return availablePosts[i].Score > availablePosts[j].Score
+	})
+
+	log.Printf("Sort Array by DESC: %v", availablePosts)
+
+	if uint32(len(availablePosts)) > in.PageSize {
+		availablePosts = availablePosts[:in.PageSize]
+	}
+
+	log.Printf("Sort Array by DESC and get 10 items: %v", availablePosts)
+
+	var responseDisplayPost []*ps.DisplayPost
+
+	for _, post := range availablePosts {
+		postID := post.PostID
+		var postData models.Post
+		if err := s.DB.Model(&models.Post{}).Where("id = ?", postID).First(&postData).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				continue
+			} else {
+				return nil, err
+			}
+		}
+
+		if postData.PrivacyStatus == "private" && uint64(postData.AccountID) != in.AccountID {
+			continue
+		}
+
+		if (postData.PrivacyStatus == "friend_only") && (uint64(postData.AccountID) != in.AccountID || !checkIsFriend(listFriendIds, uint64(postData.AccountID))) {
+			continue
+		}
+
+		var displayPost = ps.DisplayPost{
+			PostID:                  uint64(postData.ID),
+			Content:                 strings.TrimSpace(postData.Content),
+			IsShared:                postData.IsShared,
+			SharePostID:             uint64(postData.OriginalPostID),
+			IsSelfDeleted:           postData.IsSelfDeleted,
+			IsDeletedByAdmin:        postData.IsDeletedByAdmin,
+			IsHidden:                postData.IsHidden,
+			IsContentEdited:         postData.IsContentEdited,
+			PrivacyStatus:           postData.PrivacyStatus,
+			CreatedAt:               postData.CreatedAt.Unix(),
+			IsPublishedLater:        postData.IsPublishedLater,
+			PublishedLaterTimestamp: postData.PublishLaterTimestamp.Unix(),
+			IsPublished:             postData.IsPublished,
+			AccountID:               uint64(postData.AccountID),
+		}
+
+		if postData.IsShared {
+			var originPost models.Post
+			var ShareData *ps.DisplayPost
+			if err := s.DB.Model(models.Post{}).
+				Where(map[string]interface{}{
+					"id":             postData.OriginalPostID,
+					"privacy_status": "public",
+				}, postData.OriginalPostID).First(&originPost).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					ShareData = &ps.DisplayPost{
+						Error: "Post not found",
+					}
+				} else {
+					ShareData = &ps.DisplayPost{
+						Error: err.Error(),
+					}
+				}
+			} else {
+
+				var medias []models.PostMultiMedia
+				var mediasDisplay = make([]*ps.MediaDisplay, 0)
+
+				if err := s.DB.Model(models.PostMultiMedia{}).Where(
+					map[string]interface{}{
+						"is_self_deleted":     false,
+						"is_deleted_by_admin": false,
+						"upload_status":       "uploaded",
+						"post_id":             uint64(postData.OriginalPostID),
+					}).Find(&medias).Error; err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						medias = make([]models.PostMultiMedia, 0)
+					} else {
+					}
+				}
+
+				for _, media := range medias {
+					mediasDisplay = append(mediasDisplay, &ps.MediaDisplay{
+						URL:     media.URL,
+						MediaID: uint64(media.ID),
+					})
+				}
+
+				ShareData = &ps.DisplayPost{
+					PostID:          uint64(originPost.ID),
+					Content:         strings.TrimSpace(originPost.Content),
+					IsContentEdited: originPost.IsContentEdited,
+					PrivacyStatus:   originPost.PrivacyStatus,
+					CreatedAt:       originPost.CreatedAt.Unix(),
+					IsPublished:     originPost.IsPublished,
+					Medias:          mediasDisplay,
+					AccountID:       uint64(originPost.AccountID),
+				}
+			}
+			displayPost.SharePostData = ShareData
+		} else {
+			displayPost.SharePostData = nil
+		}
+
+		if !postData.IsShared {
+			displayPost.SharePostData = nil
+		}
+
+		var Media []models.PostMultiMedia
+		var MediaDisplay []*ps.MediaDisplay
+
+		if err := s.DB.Model(models.PostMultiMedia{}).Where(
+			map[string]interface{}{
+				"is_self_deleted":     false,
+				"is_deleted_by_admin": false,
+				"upload_status":       "uploaded",
+				"post_id":             uint64(postData.ID),
+			}).Find(&Media).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				MediaDisplay = make([]*ps.MediaDisplay, 0)
+				Media = make([]models.PostMultiMedia, 0)
+			} else {
+			}
+		}
+
+		for _, media := range Media {
+			MediaDisplay = append(MediaDisplay, &ps.MediaDisplay{
+				URL:     media.URL,
+				MediaID: uint64(media.ID),
+			})
+		}
+
+		var reactions []models.PostReaction
+		postReaction := &ps.PostReactions{}
+
+		if err := s.DB.Model(models.PostReaction{}).
+			Where(map[string]interface{}{
+				"is_recalled": false,
+				"post_id":     postData.ID,
+			}).Find(&reactions).Error; err != nil {
+		}
+
+		if uint32(len(reactions)) > 0 {
+			postReaction.DisplayData = make([]*ps.ReactionDisplay, 0, len(reactions))
+			for _, reaction := range reactions {
+				postReaction.DisplayData = append(postReaction.DisplayData, &ps.ReactionDisplay{
+					ReactionType: reaction.ReactionType,
+					AccountID:    uint64(reaction.AccountID),
+				})
+			}
+			postReaction.Count = uint32(len(reactions))
+			fmt.Printf("Post Reaction Data: Count=%d, DisplayData=%+v\n",
+				postReaction.Count, postReaction.DisplayData)
+		}
+
+		var postShares []models.Post
+		postShareData := &ps.PostShares{}
+
+		if err := s.DB.Model(models.Post{}).Where(
+			map[string]interface{}{
+				"is_self_deleted":     false,
+				"is_deleted_by_admin": false,
+				"is_published":        true,
+				"privacy_status":      "public",
+				"original_post_id":    postData.ID,
+				"is_hidden":           false,
+			}).Find(&postShares).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				postShares = make([]models.Post, 0)
+			} else {
+			}
+		}
+
+		if len(postShares) > 0 {
+			for _, postShare := range postShares {
+				postShareData.DisplayData = append(postShareData.DisplayData, &ps.ShareDisplay{
+					AccountID: uint64(postShare.AccountID),
+					CreatedAt: postShare.CreatedAt.Unix(),
+				})
+			}
+			postShareData.Count = uint32(len(postShares))
+		}
+
+		var countComment int64
+		if err := s.DB.Model(&models.PostComment{}).
+			Where("post_id = ? AND is_self_deleted = ? AND is_deleted_by_admin = ?", postData.ID, false, false).
+			Count(&countComment).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				countComment = 0
+			} else {
+				countComment = 0
+			}
+		}
+
+		if countComment < 0 {
+			countComment = 0
+		}
+
+		postComment := &ps.PostComments{
+			Count: uint32(countComment),
+		}
+
+		var interactionType = ""
+		var reactModel models.PostReaction
+		if err := s.DB.Model(models.PostReaction{}).
+			Where(map[string]interface{}{
+				"is_recalled": false,
+				"post_id":     postData.ID,
+				"account_id":  in.AccountID,
+			}).Find(&reactModel).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				interactionType = ""
+			} else {
+			}
+		} else {
+			interactionType = reactModel.ReactionType
+		}
+
+		displayPost.Reactions = postReaction
+		displayPost.Medias = MediaDisplay
+		displayPost.Shares = postShareData
+		displayPost.Comments = postComment
+		displayPost.InteractionType = interactionType
+
+		responseDisplayPost = append(responseDisplayPost, &displayPost)
+	}
+
+	var response = &ps.GetNewFeedsResponse{
+		AccountID: in.AccountID,
+		Page:      in.Page,
+		PageSize:  in.PageSize,
+		Posts:     responseDisplayPost,
+	}
+
+	return response, nil
+}
+
+func getScoreByAccountID(interactions []*ps.InteractionScore, accountID uint64) (uint64, bool) {
+	for _, interaction := range interactions {
+		if interaction.AccountID == accountID {
+			return interaction.Score, true
+		}
+	}
+	return 0, false
+}
+
+func checkIsFriend(friendListIDs []uint64, accountID uint64) bool {
+	for _, id := range friendListIDs {
+		if id == accountID {
+			return true
+		}
+	}
+	return false
 }

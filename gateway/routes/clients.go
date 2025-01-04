@@ -5,6 +5,7 @@ import (
 	authpb "gateway/proto/auth_service"
 	friendpb "gateway/proto/friend_service"
 	moderationpb "gateway/proto/moderation_service"
+	"gateway/proto/notification_service"
 	postpb "gateway/proto/post_service"
 	privacypb "gateway/proto/privacy_service"
 	userpb "gateway/proto/user_service"
@@ -18,13 +19,14 @@ const (
 )
 
 type ServiceClients struct {
-	AuthService       authpb.AuthServiceClient
-	UserService       userpb.UserServiceClient
-	PrivacyService    privacypb.PrivacyServiceClient
-	FriendService     friendpb.FriendServiceClient
-	PostService       postpb.PostServiceClient
-	ModerationService moderationpb.ModerationServiceClient
-	Connections       []*grpc.ClientConn
+	AuthService         authpb.AuthServiceClient
+	UserService         userpb.UserServiceClient
+	PrivacyService      privacypb.PrivacyServiceClient
+	FriendService       friendpb.FriendServiceClient
+	PostService         postpb.PostServiceClient
+	ModerationService   moderationpb.ModerationServiceClient
+	NotificationService notification_service.NotificationServiceClient
+	Connections         []*grpc.ClientConn
 }
 
 func InitializeServiceClients() (*ServiceClients, error) {
@@ -66,6 +68,8 @@ func InitializeServiceClients() (*ServiceClients, error) {
 			clients.PostService = postpb.NewPostServiceClient(conn)
 		case "moderationService":
 			clients.ModerationService = moderationpb.NewModerationServiceClient(conn)
+		case "notificationService":
+			clients.NotificationService = notification_service.NewNotificationServiceClient(conn)
 		}
 	}
 

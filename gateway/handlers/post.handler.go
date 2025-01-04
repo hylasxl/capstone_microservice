@@ -11,6 +11,7 @@ import (
 	"gateway/proto/user_service"
 	"github.com/gorilla/mux"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -1348,6 +1349,252 @@ func HandlerGetWallPost(postClient post_service.PostServiceClient, userClient us
 			Page:            request.Page,
 			PageSize:        request.PageSize,
 			Posts:           returnedPostData,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to encode response", err)
+			return
+		}
+	}
+}
+
+func HandlerGetNewFeeds(postClient post_service.PostServiceClient, userClient user_service.UserServiceClient, friendClient friend_service.FriendServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request GetNewFeedsRequest
+		err := json.NewDecoder(r.Body).Decode(&request)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+
+		checkAccountID, err := userClient.CheckValidUser(ctx, &user_service.CheckValidUserRequest{
+			UserId: strconv.FormatUint(request.AccountID, 10),
+		})
+
+		if err != nil || !checkAccountID.IsValid {
+			respondWithError(w, http.StatusInternalServerError, "Invalid AccountID", err)
+			return
+		}
+
+		listFriendResp, err := friendClient.GetListFriend(ctx, &friend_service.GetListFriendRequest{
+			AccountID: strconv.FormatUint(request.AccountID, 10),
+		})
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to get friend list", err)
+			return
+		}
+
+		listIDInt64 := make([]uint64, len(listFriendResp.ListFriendIDs))
+		for _, id := range listFriendResp.ListFriendIDs {
+			idInt64, _ := strconv.ParseUint(id, 10, 64)
+			listIDInt64 = append(listIDInt64, idInt64)
+		}
+
+		userInteraction, err := friendClient.GetUserInteraction(ctx, &friend_service.GetUserInteractionRequest{
+			AccountID: request.AccountID,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to get user interaction", err)
+			return
+		}
+
+		interactions := make([]*post_service.InteractionScore, len(userInteraction.Interactions))
+		for i, interaction := range userInteraction.Interactions {
+			interactions[i] = &post_service.InteractionScore{
+				AccountID: interaction.AccountID,
+				Score:     interaction.Score,
+			}
+		}
+
+		log.Printf("User Interactions: %+v\n", userInteraction.Interactions)
+		log.Printf("List Friend IDs: %+v\n", listFriendResp.ListFriendIDs)
+
+		newFeedsResp, err := postClient.GetNewFeeds(ctx, &post_service.GetNewFeedsRequest{
+			AccountID:     request.AccountID,
+			Page:          request.Page,
+			PageSize:      request.PageSize,
+			SeenPostIDs:   request.SeenPostID,
+			ListFriendIDs: listIDInt64,
+			Interactions:  interactions,
+		})
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to get new feed list", err)
+			return
+		}
+
+		var returnedPostData = make([]DisplayPost, 0)
+
+		for _, post := range newFeedsResp.Posts {
+
+			var accountList []uint64
+			accountList = append(accountList, post.AccountID)
+			accountInfoResp, err := userClient.GetListAccountDisplayInfo(ctx, &user_service.GetListAccountDisplayInfoRequest{
+				IDs: accountList,
+			})
+
+			if err != nil {
+				respondWithError(w, http.StatusInternalServerError, "Failed to get account list", err)
+				return
+			}
+
+			var mediaArr = make([]PostShareMediaDisplay, 0)
+			for _, media := range post.Medias {
+				mediaArr = append(mediaArr, PostShareMediaDisplay{
+					URL:     media.URL,
+					Content: media.Content,
+					MediaID: media.MediaID,
+				})
+			}
+
+			var sharePostData = &SharePostDataDisplay{}
+			if post.IsShared {
+
+				var accountListShare []uint64
+				accountListShare = append(accountListShare, post.SharePostData.AccountID)
+
+				accountShareInfo, err := userClient.GetListAccountDisplayInfo(ctx, &user_service.GetListAccountDisplayInfoRequest{
+					IDs: accountListShare,
+				})
+
+				if err != nil {
+					respondWithError(w, http.StatusInternalServerError, "Failed to get account list", err)
+					return
+				}
+
+				var sharePostMedias = make([]PostShareMediaDisplay, 0)
+				if post.SharePostData != nil {
+					for _, media := range post.SharePostData.Medias {
+						sharePostMedias = append(sharePostMedias, PostShareMediaDisplay{
+							URL:     media.URL,
+							Content: media.Content,
+							MediaID: media.MediaID,
+						})
+					}
+					sharePostData.PostID = post.SharePostData.PostID
+					sharePostData.Content = post.SharePostData.Content
+					sharePostData.IsContentEdited = post.SharePostData.IsContentEdited
+					sharePostData.PrivacyStatus = post.SharePostData.PrivacyStatus
+					sharePostData.CreatedAt = post.SharePostData.CreatedAt
+					sharePostData.IsPublished = post.SharePostData.IsPublished
+					sharePostData.Medias = sharePostMedias
+					sharePostData.Account = SingleAccountInfo{
+						AccountID:   uint(accountShareInfo.Infos[0].AccountID),
+						AvatarURL:   accountShareInfo.Infos[0].AvatarURL,
+						DisplayName: accountShareInfo.Infos[0].DisplayName,
+					}
+				}
+			} else {
+				post.SharePostData = nil
+			}
+
+			var postReaction PostReactionDisplay
+
+			postReaction.TotalQuantity = uint64(post.Reactions.Count)
+			postReaction.Reactions = make([]PostReactionData, 0, post.Reactions.Count)
+
+			var accountReactionIDs []uint64
+			for _, reaction := range post.Reactions.DisplayData {
+				accountReactionIDs = append(accountReactionIDs, reaction.AccountID)
+			}
+
+			if len(accountReactionIDs) > 0 {
+				userInfoDisplayList, err := userClient.GetListAccountDisplayInfo(ctx, &user_service.GetListAccountDisplayInfoRequest{
+					IDs: accountReactionIDs,
+				})
+				if err != nil {
+					respondWithError(w, http.StatusInternalServerError, "Failed to get account display info", err)
+					return
+				}
+
+				for index, userInfoDisplay := range userInfoDisplayList.Infos {
+					if index >= len(post.Reactions.DisplayData) {
+						break
+					}
+					var accountInfo = SingleAccountInfo{
+						AccountID:   uint(userInfoDisplay.AccountID),
+						AvatarURL:   userInfoDisplay.AvatarURL,
+						DisplayName: userInfoDisplay.DisplayName,
+					}
+					var postReactionData = PostReactionData{
+						ReactionType: post.Reactions.DisplayData[index].ReactionType,
+						Account:      accountInfo,
+					}
+					postReaction.Reactions = append(postReaction.Reactions, postReactionData)
+				}
+			}
+
+			var postCommentDisplay PostCommentDisplay
+			postCommentDisplay.TotalQuantity = uint64(post.Comments.Count)
+
+			var postShareDisplay PostShareDisplay
+			postShareDisplay.TotalQuantity = uint64(post.Shares.Count)
+			var accountShareIDs = make([]uint64, post.Shares.Count)
+			for _, share := range post.Shares.DisplayData {
+				accountShareIDs = append(accountShareIDs, share.AccountID)
+			}
+
+			if len(accountShareIDs) > 0 {
+				userDisplayList, err := userClient.GetListAccountDisplayInfo(ctx, &user_service.GetListAccountDisplayInfoRequest{
+					IDs: accountShareIDs,
+				})
+				if err != nil {
+					respondWithError(w, http.StatusInternalServerError, "Failed to get account display info", err)
+					return
+				}
+				for index, userInfoDisplay := range userDisplayList.Infos {
+					var accountInfo = SingleAccountInfo{
+						AccountID:   uint(userInfoDisplay.AccountID),
+						AvatarURL:   userInfoDisplay.AvatarURL,
+						DisplayName: userInfoDisplay.DisplayName,
+					}
+					var shareData = PostShareData{
+						CreatedAt: post.Shares.DisplayData[index].CreatedAt,
+						Account:   accountInfo,
+					}
+
+					postShareDisplay.Shares = append(postShareDisplay.Shares, shareData)
+				}
+			}
+
+			var displayPost = &DisplayPost{
+				CreatedAt:               post.CreatedAt,
+				PostID:                  post.PostID,
+				Content:                 post.Content,
+				SharePostID:             post.SharePostID,
+				IsHidden:                post.IsHidden,
+				IsContentEdited:         post.IsContentEdited,
+				IsShared:                post.IsShared,
+				IsPublished:             post.IsPublished,
+				IsPublishedLater:        post.IsPublishedLater,
+				PublishedLaterTimestamp: post.PublishedLaterTimestamp,
+				PrivacyStatus:           post.PrivacyStatus,
+				InteractionType:         post.InteractionType,
+				Medias:                  mediaArr,
+				SharePostData:           *sharePostData,
+				Reactions:               postReaction,
+				CommentQuantity:         postCommentDisplay,
+				Shares:                  postShareDisplay,
+				Account: SingleAccountInfo{
+					AccountID:   uint(accountInfoResp.Infos[0].AccountID),
+					AvatarURL:   accountInfoResp.Infos[0].AvatarURL,
+					DisplayName: accountInfoResp.Infos[0].DisplayName,
+				},
+			}
+
+			returnedPostData = append(returnedPostData, *displayPost)
+		}
+
+		var response = &GetNewFeedsResponse{
+			AccountID: request.AccountID,
+			Page:      uint64(request.Page),
+			PageSize:  uint64(request.PageSize),
+			Posts:     returnedPostData,
 		}
 
 		w.Header().Set("Content-Type", "application/json")

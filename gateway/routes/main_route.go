@@ -10,4 +10,6 @@ func InitializeRoutes(router *mux.Router, clients *ServiceClients) {
 	InitializeFriendRoutes(router, clients)
 	InitializePostRoutes(router, clients)
 	InitializePingRoutes(router)
+	InitNotificationRoutes(router, clients)
+	InitPrivacyRoute(router, clients)
 }

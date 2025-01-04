@@ -6,6 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"strconv"
+	"strings"
 	"time"
 	"user_service/constants"
 	"user_service/models"
@@ -238,7 +239,7 @@ func (svc *UserService) GetListAccountDisplayInfo(ctx context.Context, in *user_
 		}
 
 		var accountAvatar models.AccountAvatar
-		if err := tx.Where("account_id = ?", record).First(&accountAvatar).Error; err != nil {
+		if err := tx.Where("account_id = ? AND is_in_used = ?", record, true).First(&accountAvatar).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				accountAvatar = models.AccountAvatar{
 					AvatarURL: constants.AVATARDEFAULTURL,
@@ -365,5 +366,223 @@ func (svc *UserService) GetAccountInfo(ctx context.Context, in *user_service.Get
 		Account:       account,
 		AccountInfo:   info,
 		AccountAvatar: avatar,
+	}, nil
+}
+func (svc *UserService) GetProfileInfo(ctx context.Context, in *user_service.GetProfileInfoRequest) (*user_service.GetProfileInfoResponse, error) {
+	tx := svc.DB.Begin()
+
+	if in.IsBlocked {
+		return nil, errors.New("user is blocked")
+	}
+
+	isSelf := in.TargetAccountID == in.RequestAccountID
+	var accountInfo models.AccountInfo
+	var accountAvatar models.AccountAvatar
+	var account models.Account
+
+	// Fetch AccountInfo
+	if err := tx.Model(&models.AccountInfo{}).Where("account_id = ?", in.TargetAccountID).First(&accountInfo).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Fetch AccountAvatar
+	if err := tx.Model(&models.AccountAvatar{}).Where("account_id = ? AND is_in_used = ?", in.TargetAccountID, true).First(&accountAvatar).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			accountAvatar = models.AccountAvatar{
+				AvatarURL: constants.AVATARDEFAULTURL,
+				IsDeleted: false,
+				AccountID: uint(in.TargetAccountID),
+				IsInUsed:  true,
+			}
+		} else {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	// Fetch Account
+	if err := tx.Model(&models.Account{}).Where("id = ?", in.TargetAccountID).First(&account).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Apply privacy filter
+	filteredAccountInfo := accountInfo
+	if !isSelf {
+		filteredAccountInfo = ApplyPrivacyFilter(&accountInfo, in.Privacy, in.IsFriend)
+	}
+
+	response := &user_service.GetProfileInfoResponse{
+		AccountID: in.TargetAccountID,
+		Account: &user_service.Account{
+			Username:      account.Username,
+			RoleID:        uint32(account.AccountRoleID),
+			CreateMethod:  account.AccountCreatedByMethod,
+			IsBanned:      account.IsBanned,
+			IsRestricted:  account.IsRestricted,
+			IsSelfDeleted: account.IsSelfDeleted,
+		},
+		AccountAvatar: &user_service.Avatar{
+			AvatarURL: accountAvatar.AvatarURL,
+			IsDeleted: false,
+			IsInUse:   accountAvatar.IsInUsed,
+			ID:        uint32(accountAvatar.ID),
+		},
+		AccountInfo: &user_service.AccountInfo{
+			FirstName:       filteredAccountInfo.FirstName,
+			LastName:        filteredAccountInfo.LastName,
+			Email:           filteredAccountInfo.Email,
+			DateOfBirth:     filteredAccountInfo.DateOfBirth.Unix(),
+			Gender:          filteredAccountInfo.Gender,
+			MaterialStatus:  filteredAccountInfo.MaritalStatus,
+			PhoneNumber:     filteredAccountInfo.PhoneNumber,
+			NameDisplayType: filteredAccountInfo.NameDisplayType,
+			Bio:             filteredAccountInfo.Bio,
+		},
+		Privacy:   in.Privacy,
+		IsFriend:  in.IsFriend,
+		IsBlocked: in.IsBlocked,
+		IsFollow:  in.IsFollow,
+		Timestamp: time.Now().UTC().Unix(),
+	}
+
+	tx.Commit()
+	return response, nil
+}
+
+func ApplyPrivacyFilter(accountInfo *models.AccountInfo, privacyIndices *user_service.PrivacyIndices, isFriend bool) models.AccountInfo {
+	filtered := *accountInfo
+
+	if privacyIndices.DateOfBirth == "public" || (isFriend && privacyIndices.DateOfBirth == "friend_only") {
+	} else {
+		filtered.DateOfBirth = time.Time{}
+	}
+
+	if privacyIndices.Gender == "public" || (isFriend && privacyIndices.Gender == "friend_only") {
+	} else {
+		filtered.Gender = ""
+	}
+
+	if privacyIndices.MaterialStatus == "public" || (isFriend && privacyIndices.MaterialStatus == "friend_only") {
+	} else {
+		filtered.MaritalStatus = ""
+	}
+
+	if privacyIndices.Phone == "public" || (isFriend && privacyIndices.Phone == "friend_only") {
+
+	} else {
+		filtered.PhoneNumber = ""
+	}
+
+	if privacyIndices.Email == "public" || (isFriend && privacyIndices.Email == "friend_only") {
+
+	} else {
+		filtered.Email = ""
+	}
+
+	if privacyIndices.Bio == "public" || (isFriend && privacyIndices.Bio == "friend_only") {
+		// Include Bio
+	} else {
+		filtered.Bio = ""
+	}
+
+	return filtered
+}
+
+func (svc *UserService) ChangeAccountInfo(ctx context.Context, in *user_service.ChangeAccountDataRequest) (*user_service.ChangeAccountDataResponse, error) {
+
+	if len(strings.TrimSpace(in.DataFieldName)) == 0 {
+		return nil, errors.New("invalid data field name")
+	}
+
+	tx := svc.DB.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+
+	if in.DataFieldName == "date_of_birth" {
+		bdInt, err := strconv.ParseInt(in.Data, 10, 64)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		if err := tx.Model(&models.AccountInfo{}).
+			Where("account_id = ?", in.AccountID).
+			Update(in.DataFieldName, time.Unix(bdInt, 0)).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	} else {
+		if err := tx.Model(&models.AccountInfo{}).
+			Where("account_id = ?", in.AccountID).
+			Update(in.DataFieldName, in.Data).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return &user_service.ChangeAccountDataResponse{
+		Success: true,
+	}, nil
+}
+
+func (svc *UserService) ChangeAvatar(ctx context.Context, in *user_service.ChangeAvatarRequest) (*user_service.ChangeAvatarResponse, error) {
+	tx := svc.DB.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	if err := tx.Model(models.AccountAvatar{}).Where("account_id = ?", in.AccountID).Update("is_in_used", false).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	avatarUrl := constants.AVATARDEFAULTURL
+	uploadedStatus := "uploaded"
+	if len(in.Avatar) > 0 {
+		uploadedAvatarUrl, err := svc.CloudinaryClient.UploadAvatar(in.Avatar)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		avatarUrl = uploadedAvatarUrl
+		uploadedStatus = "failed"
+	}
+
+	accountAvatar := &models.AccountAvatar{
+		AccountID: uint(in.AccountID),
+		AvatarURL: avatarUrl,
+	}
+	if err := tx.Create(accountAvatar).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	accountAvatarHistory := &models.AccountAvatarHistory{
+		AccountID:    uint(in.AccountID),
+		AvatarURL:    avatarUrl,
+		UploadStatus: uploadedStatus,
+	}
+
+	if err := tx.Create(accountAvatarHistory).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
+	return &user_service.ChangeAvatarResponse{
+		Success: true,
 	}, nil
 }

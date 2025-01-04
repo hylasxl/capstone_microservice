@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "./notification_service";
+
+package notification;
+
+service NotificationService {
+  rpc RegisterDevice (RegisterDeviceRequest) returns (RegisterDeviceResponse);
+}
+
+message RegisterDeviceRequest {
+  uint32 UserID = 1;
+  string FCMToken = 2;
+}
+
+message RegisterDeviceResponse {
+  bool Success = 1;
+}

@@ -13,6 +13,9 @@ service UserService {
   rpc CheckValidUser (CheckValidUserRequest) returns (CheckValidUserResponse);
   rpc GetListAccountDisplayInfo (GetListAccountDisplayInfoRequest) returns (GetListAccountDisplayInfoResponse);
   rpc GetAccountInfo (GetAccountInfoRequest) returns (GetAccountInfoResponse);
+  rpc GetProfileInfo (GetProfileInfoRequest) returns (GetProfileInfoResponse);
+  rpc ChangeAccountInfo (ChangeAccountDataRequest) returns (ChangeAccountDataResponse);
+  rpc ChangeAvatar (ChangeAvatarRequest) returns (ChangeAvatarResponse);
 }
 
 message LoginRequest {
@@ -124,6 +127,15 @@ message AccountInfo {
   string Bio = 9;
 }
 
+message PrivacyIndices {
+  string DateOfBirth = 1;
+  string Gender = 2;
+  string MaterialStatus = 3;
+  string Phone = 4;
+  string Email = 5;
+  string Bio = 6;
+}
+
 message Avatar {
   uint32 ID = 1;
   string AvatarURL = 2;
@@ -131,3 +143,43 @@ message Avatar {
   bool IsDeleted = 4;
 }
 
+message GetProfileInfoRequest {
+  uint32 RequestAccountID = 1;
+  uint32 TargetAccountID = 2;
+  bool IsFriend = 3;
+  bool IsBlocked = 4;
+  bool IsFollow = 5;
+  PrivacyIndices Privacy = 6;
+}
+
+message GetProfileInfoResponse {
+  uint32 AccountID = 1;
+  Account Account = 2;
+  AccountInfo AccountInfo = 3;
+  Avatar AccountAvatar = 4;
+  PrivacyIndices Privacy = 5;
+  bool IsFriend = 6;
+  bool IsBlocked = 7;
+  bool IsFollow = 8;
+  int64 Timestamp = 9;
+  string Error = 10;
+}
+
+message ChangeAccountDataRequest {
+  uint64 AccountID = 1;
+  string DataFieldName = 2;
+  string Data = 3;
+}
+
+message ChangeAccountDataResponse {
+  bool Success = 1;
+}
+
+message ChangeAvatarRequest {
+  bytes Avatar = 1;
+  uint64 AccountID = 2;
+}
+
+message ChangeAvatarResponse {
+  bool Success = 1;
+}

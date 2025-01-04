@@ -27,6 +27,9 @@ const (
 	UserService_CheckValidUser_FullMethodName            = "/user.UserService/CheckValidUser"
 	UserService_GetListAccountDisplayInfo_FullMethodName = "/user.UserService/GetListAccountDisplayInfo"
 	UserService_GetAccountInfo_FullMethodName            = "/user.UserService/GetAccountInfo"
+	UserService_GetProfileInfo_FullMethodName            = "/user.UserService/GetProfileInfo"
+	UserService_ChangeAccountInfo_FullMethodName         = "/user.UserService/ChangeAccountInfo"
+	UserService_ChangeAvatar_FullMethodName              = "/user.UserService/ChangeAvatar"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -41,6 +44,9 @@ type UserServiceClient interface {
 	CheckValidUser(ctx context.Context, in *CheckValidUserRequest, opts ...grpc.CallOption) (*CheckValidUserResponse, error)
 	GetListAccountDisplayInfo(ctx context.Context, in *GetListAccountDisplayInfoRequest, opts ...grpc.CallOption) (*GetListAccountDisplayInfoResponse, error)
 	GetAccountInfo(ctx context.Context, in *GetAccountInfoRequest, opts ...grpc.CallOption) (*GetAccountInfoResponse, error)
+	GetProfileInfo(ctx context.Context, in *GetProfileInfoRequest, opts ...grpc.CallOption) (*GetProfileInfoResponse, error)
+	ChangeAccountInfo(ctx context.Context, in *ChangeAccountDataRequest, opts ...grpc.CallOption) (*ChangeAccountDataResponse, error)
+	ChangeAvatar(ctx context.Context, in *ChangeAvatarRequest, opts ...grpc.CallOption) (*ChangeAvatarResponse, error)
 }
 
 type userServiceClient struct {
@@ -131,6 +137,36 @@ func (c *userServiceClient) GetAccountInfo(ctx context.Context, in *GetAccountIn
 	return out, nil
 }
 
+func (c *userServiceClient) GetProfileInfo(ctx context.Context, in *GetProfileInfoRequest, opts ...grpc.CallOption) (*GetProfileInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProfileInfoResponse)
+	err := c.cc.Invoke(ctx, UserService_GetProfileInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ChangeAccountInfo(ctx context.Context, in *ChangeAccountDataRequest, opts ...grpc.CallOption) (*ChangeAccountDataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangeAccountDataResponse)
+	err := c.cc.Invoke(ctx, UserService_ChangeAccountInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ChangeAvatar(ctx context.Context, in *ChangeAvatarRequest, opts ...grpc.CallOption) (*ChangeAvatarResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangeAvatarResponse)
+	err := c.cc.Invoke(ctx, UserService_ChangeAvatar_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -143,6 +179,9 @@ type UserServiceServer interface {
 	CheckValidUser(context.Context, *CheckValidUserRequest) (*CheckValidUserResponse, error)
 	GetListAccountDisplayInfo(context.Context, *GetListAccountDisplayInfoRequest) (*GetListAccountDisplayInfoResponse, error)
 	GetAccountInfo(context.Context, *GetAccountInfoRequest) (*GetAccountInfoResponse, error)
+	GetProfileInfo(context.Context, *GetProfileInfoRequest) (*GetProfileInfoResponse, error)
+	ChangeAccountInfo(context.Context, *ChangeAccountDataRequest) (*ChangeAccountDataResponse, error)
+	ChangeAvatar(context.Context, *ChangeAvatarRequest) (*ChangeAvatarResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -176,6 +215,15 @@ func (UnimplementedUserServiceServer) GetListAccountDisplayInfo(context.Context,
 }
 func (UnimplementedUserServiceServer) GetAccountInfo(context.Context, *GetAccountInfoRequest) (*GetAccountInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAccountInfo not implemented")
+}
+func (UnimplementedUserServiceServer) GetProfileInfo(context.Context, *GetProfileInfoRequest) (*GetProfileInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProfileInfo not implemented")
+}
+func (UnimplementedUserServiceServer) ChangeAccountInfo(context.Context, *ChangeAccountDataRequest) (*ChangeAccountDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeAccountInfo not implemented")
+}
+func (UnimplementedUserServiceServer) ChangeAvatar(context.Context, *ChangeAvatarRequest) (*ChangeAvatarResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeAvatar not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -342,6 +390,60 @@ func _UserService_GetAccountInfo_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetProfileInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProfileInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetProfileInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetProfileInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetProfileInfo(ctx, req.(*GetProfileInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ChangeAccountInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeAccountDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ChangeAccountInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ChangeAccountInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ChangeAccountInfo(ctx, req.(*ChangeAccountDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ChangeAvatar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeAvatarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ChangeAvatar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ChangeAvatar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ChangeAvatar(ctx, req.(*ChangeAvatarRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -380,6 +482,18 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAccountInfo",
 			Handler:    _UserService_GetAccountInfo_Handler,
+		},
+		{
+			MethodName: "GetProfileInfo",
+			Handler:    _UserService_GetProfileInfo_Handler,
+		},
+		{
+			MethodName: "ChangeAccountInfo",
+			Handler:    _UserService_ChangeAccountInfo_Handler,
+		},
+		{
+			MethodName: "ChangeAvatar",
+			Handler:    _UserService_ChangeAvatar_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

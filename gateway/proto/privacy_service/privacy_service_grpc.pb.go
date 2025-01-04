@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	PrivacyService_CreateAccountPrivacyInit_FullMethodName = "/privacy.PrivacyService/CreateAccountPrivacyInit"
+	PrivacyService_GetPrivacy_FullMethodName               = "/privacy.PrivacyService/GetPrivacy"
+	PrivacyService_SetPrivacy_FullMethodName               = "/privacy.PrivacyService/SetPrivacy"
 )
 
 // PrivacyServiceClient is the client API for PrivacyService service.
@@ -27,6 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PrivacyServiceClient interface {
 	CreateAccountPrivacyInit(ctx context.Context, in *CreateAccountPrivacyInitRequest, opts ...grpc.CallOption) (*CreateAccountPrivacyInitResponse, error)
+	GetPrivacy(ctx context.Context, in *GetPrivacyRequest, opts ...grpc.CallOption) (*GetPrivacyResponse, error)
+	SetPrivacy(ctx context.Context, in *SetPrivacyRequest, opts ...grpc.CallOption) (*SetPrivacyResponse, error)
 }
 
 type privacyServiceClient struct {
@@ -47,11 +51,33 @@ func (c *privacyServiceClient) CreateAccountPrivacyInit(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *privacyServiceClient) GetPrivacy(ctx context.Context, in *GetPrivacyRequest, opts ...grpc.CallOption) (*GetPrivacyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPrivacyResponse)
+	err := c.cc.Invoke(ctx, PrivacyService_GetPrivacy_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *privacyServiceClient) SetPrivacy(ctx context.Context, in *SetPrivacyRequest, opts ...grpc.CallOption) (*SetPrivacyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetPrivacyResponse)
+	err := c.cc.Invoke(ctx, PrivacyService_SetPrivacy_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PrivacyServiceServer is the server API for PrivacyService service.
 // All implementations must embed UnimplementedPrivacyServiceServer
 // for forward compatibility.
 type PrivacyServiceServer interface {
 	CreateAccountPrivacyInit(context.Context, *CreateAccountPrivacyInitRequest) (*CreateAccountPrivacyInitResponse, error)
+	GetPrivacy(context.Context, *GetPrivacyRequest) (*GetPrivacyResponse, error)
+	SetPrivacy(context.Context, *SetPrivacyRequest) (*SetPrivacyResponse, error)
 	mustEmbedUnimplementedPrivacyServiceServer()
 }
 
@@ -64,6 +90,12 @@ type UnimplementedPrivacyServiceServer struct{}
 
 func (UnimplementedPrivacyServiceServer) CreateAccountPrivacyInit(context.Context, *CreateAccountPrivacyInitRequest) (*CreateAccountPrivacyInitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAccountPrivacyInit not implemented")
+}
+func (UnimplementedPrivacyServiceServer) GetPrivacy(context.Context, *GetPrivacyRequest) (*GetPrivacyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPrivacy not implemented")
+}
+func (UnimplementedPrivacyServiceServer) SetPrivacy(context.Context, *SetPrivacyRequest) (*SetPrivacyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetPrivacy not implemented")
 }
 func (UnimplementedPrivacyServiceServer) mustEmbedUnimplementedPrivacyServiceServer() {}
 func (UnimplementedPrivacyServiceServer) testEmbeddedByValue()                        {}
@@ -104,6 +136,42 @@ func _PrivacyService_CreateAccountPrivacyInit_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PrivacyService_GetPrivacy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPrivacyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PrivacyServiceServer).GetPrivacy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PrivacyService_GetPrivacy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PrivacyServiceServer).GetPrivacy(ctx, req.(*GetPrivacyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PrivacyService_SetPrivacy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetPrivacyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PrivacyServiceServer).SetPrivacy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PrivacyService_SetPrivacy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PrivacyServiceServer).SetPrivacy(ctx, req.(*SetPrivacyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PrivacyService_ServiceDesc is the grpc.ServiceDesc for PrivacyService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +182,14 @@ var PrivacyService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateAccountPrivacyInit",
 			Handler:    _PrivacyService_CreateAccountPrivacyInit_Handler,
+		},
+		{
+			MethodName: "GetPrivacy",
+			Handler:    _PrivacyService_GetPrivacy_Handler,
+		},
+		{
+			MethodName: "SetPrivacy",
+			Handler:    _PrivacyService_SetPrivacy_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

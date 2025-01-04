@@ -460,3 +460,37 @@ func HandlerCountPendingFriendRequest(friendClient friend_service.FriendServiceC
 		}
 	}
 }
+
+func HandlerCheckExistingFriendRequest(friendClient friend_service.FriendServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request CheckExistingFriendRequestRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		checkResp, err := friendClient.CheckExistingRequest(ctx, &friend_service.CheckExistingRequestRequest{
+			FromAccountID: request.FromAccountID,
+			ToAccountID:   request.ToAccountID,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Check existing friend request error", err)
+			return
+		}
+
+		response := CheckExistingFriendRequestResponse{
+			IsExisting: checkResp.IsExisting,
+			RequestID:  checkResp.RequestID,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err = json.NewEncoder(w).Encode(response); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Check existing friend response error", err)
+		}
+	}
+}

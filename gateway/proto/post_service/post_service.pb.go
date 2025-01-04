@@ -3815,6 +3815,213 @@ func (x *PostShares) GetDisplayData() []*ShareDisplay {
 	return nil
 }
 
+type GetNewFeedsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	AccountID     uint64              `protobuf:"varint,1,opt,name=AccountID,proto3" json:"AccountID,omitempty"`
+	Page          uint32              `protobuf:"varint,2,opt,name=Page,proto3" json:"Page,omitempty"`
+	PageSize      uint32              `protobuf:"varint,3,opt,name=PageSize,proto3" json:"PageSize,omitempty"`
+	SeenPostIDs   []uint64            `protobuf:"varint,4,rep,packed,name=SeenPostIDs,proto3" json:"SeenPostIDs,omitempty"`
+	Interactions  []*InteractionScore `protobuf:"bytes,5,rep,name=Interactions,proto3" json:"Interactions,omitempty"`
+	ListFriendIDs []uint64            `protobuf:"varint,6,rep,packed,name=ListFriendIDs,proto3" json:"ListFriendIDs,omitempty"`
+}
+
+func (x *GetNewFeedsRequest) Reset() {
+	*x = GetNewFeedsRequest{}
+	mi := &file_proto_post_service_post_service_proto_msgTypes[63]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetNewFeedsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetNewFeedsRequest) ProtoMessage() {}
+
+func (x *GetNewFeedsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_post_service_post_service_proto_msgTypes[63]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetNewFeedsRequest.ProtoReflect.Descriptor instead.
+func (*GetNewFeedsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_post_service_post_service_proto_rawDescGZIP(), []int{63}
+}
+
+func (x *GetNewFeedsRequest) GetAccountID() uint64 {
+	if x != nil {
+		return x.AccountID
+	}
+	return 0
+}
+
+func (x *GetNewFeedsRequest) GetPage() uint32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *GetNewFeedsRequest) GetPageSize() uint32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *GetNewFeedsRequest) GetSeenPostIDs() []uint64 {
+	if x != nil {
+		return x.SeenPostIDs
+	}
+	return nil
+}
+
+func (x *GetNewFeedsRequest) GetInteractions() []*InteractionScore {
+	if x != nil {
+		return x.Interactions
+	}
+	return nil
+}
+
+func (x *GetNewFeedsRequest) GetListFriendIDs() []uint64 {
+	if x != nil {
+		return x.ListFriendIDs
+	}
+	return nil
+}
+
+type GetNewFeedsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	AccountID uint64         `protobuf:"varint,1,opt,name=AccountID,proto3" json:"AccountID,omitempty"`
+	Page      uint32         `protobuf:"varint,2,opt,name=Page,proto3" json:"Page,omitempty"`
+	PageSize  uint32         `protobuf:"varint,3,opt,name=PageSize,proto3" json:"PageSize,omitempty"`
+	Posts     []*DisplayPost `protobuf:"bytes,4,rep,name=Posts,proto3" json:"Posts,omitempty"`
+}
+
+func (x *GetNewFeedsResponse) Reset() {
+	*x = GetNewFeedsResponse{}
+	mi := &file_proto_post_service_post_service_proto_msgTypes[64]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetNewFeedsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetNewFeedsResponse) ProtoMessage() {}
+
+func (x *GetNewFeedsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_post_service_post_service_proto_msgTypes[64]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetNewFeedsResponse.ProtoReflect.Descriptor instead.
+func (*GetNewFeedsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_post_service_post_service_proto_rawDescGZIP(), []int{64}
+}
+
+func (x *GetNewFeedsResponse) GetAccountID() uint64 {
+	if x != nil {
+		return x.AccountID
+	}
+	return 0
+}
+
+func (x *GetNewFeedsResponse) GetPage() uint32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *GetNewFeedsResponse) GetPageSize() uint32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *GetNewFeedsResponse) GetPosts() []*DisplayPost {
+	if x != nil {
+		return x.Posts
+	}
+	return nil
+}
+
+type InteractionScore struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	AccountID uint64 `protobuf:"varint,1,opt,name=AccountID,proto3" json:"AccountID,omitempty"`
+	Score     uint64 `protobuf:"varint,2,opt,name=Score,proto3" json:"Score,omitempty"`
+}
+
+func (x *InteractionScore) Reset() {
+	*x = InteractionScore{}
+	mi := &file_proto_post_service_post_service_proto_msgTypes[65]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InteractionScore) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InteractionScore) ProtoMessage() {}
+
+func (x *InteractionScore) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_post_service_post_service_proto_msgTypes[65]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InteractionScore.ProtoReflect.Descriptor instead.
+func (*InteractionScore) Descriptor() ([]byte, []int) {
+	return file_proto_post_service_post_service_proto_rawDescGZIP(), []int{65}
+}
+
+func (x *InteractionScore) GetAccountID() uint64 {
+	if x != nil {
+		return x.AccountID
+	}
+	return 0
+}
+
+func (x *InteractionScore) GetScore() uint64 {
+	if x != nil {
+		return x.Score
+	}
+	return 0
+}
+
 var File_proto_post_service_post_service_proto protoreflect.FileDescriptor
 
 var file_proto_post_service_post_service_proto_rawDesc = []byte{
@@ -4271,7 +4478,35 @@ var file_proto_post_service_post_service_proto_rawDesc = []byte{
 	0x6f, 0x75, 0x6e, 0x74, 0x12, 0x34, 0x0a, 0x0b, 0x44, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x44,
 	0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x6f, 0x73, 0x74,
 	0x2e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x44, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x52, 0x0b, 0x44,
-	0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x44, 0x61, 0x74, 0x61, 0x32, 0xb0, 0x0f, 0x0a, 0x0b, 0x50,
+	0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x44, 0x61, 0x74, 0x61, 0x22, 0xe6, 0x01, 0x0a, 0x12, 0x47,
+	0x65, 0x74, 0x4e, 0x65, 0x77, 0x46, 0x65, 0x65, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x1c, 0x0a, 0x09, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x49, 0x44, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x49, 0x44, 0x12,
+	0x12, 0x0a, 0x04, 0x50, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x50,
+	0x61, 0x67, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x50, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x50, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x12,
+	0x20, 0x0a, 0x0b, 0x53, 0x65, 0x65, 0x6e, 0x50, 0x6f, 0x73, 0x74, 0x49, 0x44, 0x73, 0x18, 0x04,
+	0x20, 0x03, 0x28, 0x04, 0x52, 0x0b, 0x53, 0x65, 0x65, 0x6e, 0x50, 0x6f, 0x73, 0x74, 0x49, 0x44,
+	0x73, 0x12, 0x3a, 0x0a, 0x0c, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x18, 0x05, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x70, 0x6f, 0x73, 0x74, 0x2e, 0x49,
+	0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x63, 0x6f, 0x72, 0x65, 0x52,
+	0x0c, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x24, 0x0a,
+	0x0d, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x49, 0x44, 0x73, 0x18, 0x06,
+	0x20, 0x03, 0x28, 0x04, 0x52, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64,
+	0x49, 0x44, 0x73, 0x22, 0x8c, 0x01, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x4e, 0x65, 0x77, 0x46, 0x65,
+	0x65, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x41,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09,
+	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x49, 0x44, 0x12, 0x12, 0x0a, 0x04, 0x50, 0x61, 0x67,
+	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x50, 0x61, 0x67, 0x65, 0x12, 0x1a, 0x0a,
+	0x08, 0x50, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x08, 0x50, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x12, 0x27, 0x0a, 0x05, 0x50, 0x6f, 0x73,
+	0x74, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x70, 0x6f, 0x73, 0x74, 0x2e,
+	0x44, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x50, 0x6f, 0x73, 0x74, 0x52, 0x05, 0x50, 0x6f, 0x73,
+	0x74, 0x73, 0x22, 0x46, 0x0a, 0x10, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f,
+	0x6e, 0x53, 0x63, 0x6f, 0x72, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x41, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x49, 0x44, 0x12, 0x14, 0x0a, 0x05, 0x53, 0x63, 0x6f, 0x72, 0x65, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x05, 0x53, 0x63, 0x6f, 0x72, 0x65, 0x32, 0xf4, 0x0f, 0x0a, 0x0b, 0x50,
 	0x6f, 0x73, 0x74, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x42, 0x0a, 0x0d, 0x43, 0x72,
 	0x65, 0x61, 0x74, 0x65, 0x4e, 0x65, 0x77, 0x50, 0x6f, 0x73, 0x74, 0x12, 0x17, 0x2e, 0x70, 0x6f,
 	0x73, 0x74, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x73, 0x74, 0x52, 0x65, 0x71,
@@ -4394,9 +4629,13 @@ var file_proto_post_service_post_service_proto_rawDesc = []byte{
 	0x12, 0x1c, 0x2e, 0x70, 0x6f, 0x73, 0x74, 0x2e, 0x47, 0x65, 0x74, 0x57, 0x61, 0x6c, 0x6c, 0x50,
 	0x6f, 0x73, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d,
 	0x2e, 0x70, 0x6f, 0x73, 0x74, 0x2e, 0x47, 0x65, 0x74, 0x57, 0x61, 0x6c, 0x6c, 0x50, 0x6f, 0x73,
-	0x74, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x10, 0x5a,
-	0x0e, 0x2e, 0x2f, 0x70, 0x6f, 0x73, 0x74, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x42, 0x0a,
+	0x0b, 0x47, 0x65, 0x74, 0x4e, 0x65, 0x77, 0x46, 0x65, 0x65, 0x64, 0x73, 0x12, 0x18, 0x2e, 0x70,
+	0x6f, 0x73, 0x74, 0x2e, 0x47, 0x65, 0x74, 0x4e, 0x65, 0x77, 0x46, 0x65, 0x65, 0x64, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x19, 0x2e, 0x70, 0x6f, 0x73, 0x74, 0x2e, 0x47, 0x65,
+	0x74, 0x4e, 0x65, 0x77, 0x46, 0x65, 0x65, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x42, 0x10, 0x5a, 0x0e, 0x2e, 0x2f, 0x70, 0x6f, 0x73, 0x74, 0x5f, 0x73, 0x65, 0x72, 0x76,
+	0x69, 0x63, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4411,7 +4650,7 @@ func file_proto_post_service_post_service_proto_rawDescGZIP() []byte {
 	return file_proto_post_service_post_service_proto_rawDescData
 }
 
-var file_proto_post_service_post_service_proto_msgTypes = make([]protoimpl.MessageInfo, 63)
+var file_proto_post_service_post_service_proto_msgTypes = make([]protoimpl.MessageInfo, 66)
 var file_proto_post_service_post_service_proto_goTypes = []any{
 	(*CreatePostRequest)(nil),           // 0: post.CreatePostRequest
 	(*MultiMediaMessage)(nil),           // 1: post.MultiMediaMessage
@@ -4476,6 +4715,9 @@ var file_proto_post_service_post_service_proto_goTypes = []any{
 	(*PostReactions)(nil),               // 60: post.PostReactions
 	(*PostComments)(nil),                // 61: post.PostComments
 	(*PostShares)(nil),                  // 62: post.PostShares
+	(*GetNewFeedsRequest)(nil),          // 63: post.GetNewFeedsRequest
+	(*GetNewFeedsResponse)(nil),         // 64: post.GetNewFeedsResponse
+	(*InteractionScore)(nil),            // 65: post.InteractionScore
 }
 var file_proto_post_service_post_service_proto_depIdxs = []int32{
 	1,  // 0: post.UploadImageRequest.Medias:type_name -> post.MultiMediaMessage
@@ -4494,63 +4736,67 @@ var file_proto_post_service_post_service_proto_depIdxs = []int32{
 	53, // 13: post.PostReactions.DisplayData:type_name -> post.ReactionDisplay
 	50, // 14: post.PostComments.DisplayData:type_name -> post.CommentDisplay
 	51, // 15: post.PostShares.DisplayData:type_name -> post.ShareDisplay
-	0,  // 16: post.PostService.CreateNewPost:input_type -> post.CreatePostRequest
-	3,  // 17: post.PostService.UploadPostImage:input_type -> post.UploadImageRequest
-	5,  // 18: post.PostService.SharePost:input_type -> post.SharePostRequest
-	7,  // 19: post.PostService.CommentPost:input_type -> post.CommentPostRequest
-	9,  // 20: post.PostService.GetSinglePost:input_type -> post.GetSinglePostRequest
-	11, // 21: post.PostService.EditPost:input_type -> post.EditPostRequest
-	13, // 22: post.PostService.DeletePost:input_type -> post.DeletePostRequest
-	15, // 23: post.PostService.ReplyComment:input_type -> post.ReplyCommentRequest
-	17, // 24: post.PostService.EditComment:input_type -> post.EditCommentRequest
-	19, // 25: post.PostService.DeleteComment:input_type -> post.DeleteCommentRequest
-	21, // 26: post.PostService.DeletePostImage:input_type -> post.DeletePostImageRequest
-	23, // 27: post.PostService.ReactPost:input_type -> post.ReactPostRequest
-	25, // 28: post.PostService.RemoveReactPost:input_type -> post.RemoveReactPostRequest
-	27, // 29: post.PostService.ReactImage:input_type -> post.ReactImageRequest
-	29, // 30: post.PostService.RemoveReactImage:input_type -> post.RemoveReactImageRequest
-	31, // 31: post.PostService.CommentImage:input_type -> post.CommentImageRequest
-	33, // 32: post.PostService.ReplyCommentImage:input_type -> post.ReplyCommentImageRequest
-	35, // 33: post.PostService.EditCommentImage:input_type -> post.EditCommentImageRequest
-	37, // 34: post.PostService.DeleteCommentImage:input_type -> post.DeleteCommentImageRequest
-	39, // 35: post.PostService.CountPostComment:input_type -> post.CountPostCommentRequest
-	41, // 36: post.PostService.CountPostReaction:input_type -> post.CountPostReactionRequest
-	43, // 37: post.PostService.CountPostShare:input_type -> post.CountPostShareRequest
-	45, // 38: post.PostService.GetPostComment:input_type -> post.GetPostCommentRequest
-	48, // 39: post.PostService.GetPostReaction:input_type -> post.GetPostReactionRequest
-	54, // 40: post.PostService.GetPostMediaComment:input_type -> post.GetPostMediaCommentRequest
-	57, // 41: post.PostService.GetWallPostList:input_type -> post.GetWallPostListRequest
-	2,  // 42: post.PostService.CreateNewPost:output_type -> post.CreatePostResponse
-	4,  // 43: post.PostService.UploadPostImage:output_type -> post.UploadImageResponse
-	6,  // 44: post.PostService.SharePost:output_type -> post.SharePostResponse
-	8,  // 45: post.PostService.CommentPost:output_type -> post.CommentPostResponse
-	10, // 46: post.PostService.GetSinglePost:output_type -> post.GetSinglePostResponse
-	12, // 47: post.PostService.EditPost:output_type -> post.EditPostResponse
-	14, // 48: post.PostService.DeletePost:output_type -> post.DeletePostResponse
-	16, // 49: post.PostService.ReplyComment:output_type -> post.ReplyCommentResponse
-	18, // 50: post.PostService.EditComment:output_type -> post.EditCommentResponse
-	20, // 51: post.PostService.DeleteComment:output_type -> post.DeleteCommentResponse
-	22, // 52: post.PostService.DeletePostImage:output_type -> post.DeletePostImageResponse
-	24, // 53: post.PostService.ReactPost:output_type -> post.ReactPostResponse
-	26, // 54: post.PostService.RemoveReactPost:output_type -> post.RemoveReactPostResponse
-	28, // 55: post.PostService.ReactImage:output_type -> post.ReactImageResponse
-	30, // 56: post.PostService.RemoveReactImage:output_type -> post.RemoveReactImageResponse
-	32, // 57: post.PostService.CommentImage:output_type -> post.CommentImageResponse
-	34, // 58: post.PostService.ReplyCommentImage:output_type -> post.ReplyCommentImageResponse
-	36, // 59: post.PostService.EditCommentImage:output_type -> post.EditCommentImageResponse
-	38, // 60: post.PostService.DeleteCommentImage:output_type -> post.DeleteCommentImageResponse
-	40, // 61: post.PostService.CountPostComment:output_type -> post.CountPostCommentResponse
-	42, // 62: post.PostService.CountPostReaction:output_type -> post.CountPostReactionResponse
-	44, // 63: post.PostService.CountPostShare:output_type -> post.CountPostShareResponse
-	47, // 64: post.PostService.GetPostComment:output_type -> post.GetPostCommentResponse
-	49, // 65: post.PostService.GetPostReaction:output_type -> post.GetPostReactionResponse
-	56, // 66: post.PostService.GetPostMediaComment:output_type -> post.GetPostMediaCommentResponse
-	58, // 67: post.PostService.GetWallPostList:output_type -> post.GetWallPostListResponse
-	42, // [42:68] is the sub-list for method output_type
-	16, // [16:42] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	65, // 16: post.GetNewFeedsRequest.Interactions:type_name -> post.InteractionScore
+	59, // 17: post.GetNewFeedsResponse.Posts:type_name -> post.DisplayPost
+	0,  // 18: post.PostService.CreateNewPost:input_type -> post.CreatePostRequest
+	3,  // 19: post.PostService.UploadPostImage:input_type -> post.UploadImageRequest
+	5,  // 20: post.PostService.SharePost:input_type -> post.SharePostRequest
+	7,  // 21: post.PostService.CommentPost:input_type -> post.CommentPostRequest
+	9,  // 22: post.PostService.GetSinglePost:input_type -> post.GetSinglePostRequest
+	11, // 23: post.PostService.EditPost:input_type -> post.EditPostRequest
+	13, // 24: post.PostService.DeletePost:input_type -> post.DeletePostRequest
+	15, // 25: post.PostService.ReplyComment:input_type -> post.ReplyCommentRequest
+	17, // 26: post.PostService.EditComment:input_type -> post.EditCommentRequest
+	19, // 27: post.PostService.DeleteComment:input_type -> post.DeleteCommentRequest
+	21, // 28: post.PostService.DeletePostImage:input_type -> post.DeletePostImageRequest
+	23, // 29: post.PostService.ReactPost:input_type -> post.ReactPostRequest
+	25, // 30: post.PostService.RemoveReactPost:input_type -> post.RemoveReactPostRequest
+	27, // 31: post.PostService.ReactImage:input_type -> post.ReactImageRequest
+	29, // 32: post.PostService.RemoveReactImage:input_type -> post.RemoveReactImageRequest
+	31, // 33: post.PostService.CommentImage:input_type -> post.CommentImageRequest
+	33, // 34: post.PostService.ReplyCommentImage:input_type -> post.ReplyCommentImageRequest
+	35, // 35: post.PostService.EditCommentImage:input_type -> post.EditCommentImageRequest
+	37, // 36: post.PostService.DeleteCommentImage:input_type -> post.DeleteCommentImageRequest
+	39, // 37: post.PostService.CountPostComment:input_type -> post.CountPostCommentRequest
+	41, // 38: post.PostService.CountPostReaction:input_type -> post.CountPostReactionRequest
+	43, // 39: post.PostService.CountPostShare:input_type -> post.CountPostShareRequest
+	45, // 40: post.PostService.GetPostComment:input_type -> post.GetPostCommentRequest
+	48, // 41: post.PostService.GetPostReaction:input_type -> post.GetPostReactionRequest
+	54, // 42: post.PostService.GetPostMediaComment:input_type -> post.GetPostMediaCommentRequest
+	57, // 43: post.PostService.GetWallPostList:input_type -> post.GetWallPostListRequest
+	63, // 44: post.PostService.GetNewFeeds:input_type -> post.GetNewFeedsRequest
+	2,  // 45: post.PostService.CreateNewPost:output_type -> post.CreatePostResponse
+	4,  // 46: post.PostService.UploadPostImage:output_type -> post.UploadImageResponse
+	6,  // 47: post.PostService.SharePost:output_type -> post.SharePostResponse
+	8,  // 48: post.PostService.CommentPost:output_type -> post.CommentPostResponse
+	10, // 49: post.PostService.GetSinglePost:output_type -> post.GetSinglePostResponse
+	12, // 50: post.PostService.EditPost:output_type -> post.EditPostResponse
+	14, // 51: post.PostService.DeletePost:output_type -> post.DeletePostResponse
+	16, // 52: post.PostService.ReplyComment:output_type -> post.ReplyCommentResponse
+	18, // 53: post.PostService.EditComment:output_type -> post.EditCommentResponse
+	20, // 54: post.PostService.DeleteComment:output_type -> post.DeleteCommentResponse
+	22, // 55: post.PostService.DeletePostImage:output_type -> post.DeletePostImageResponse
+	24, // 56: post.PostService.ReactPost:output_type -> post.ReactPostResponse
+	26, // 57: post.PostService.RemoveReactPost:output_type -> post.RemoveReactPostResponse
+	28, // 58: post.PostService.ReactImage:output_type -> post.ReactImageResponse
+	30, // 59: post.PostService.RemoveReactImage:output_type -> post.RemoveReactImageResponse
+	32, // 60: post.PostService.CommentImage:output_type -> post.CommentImageResponse
+	34, // 61: post.PostService.ReplyCommentImage:output_type -> post.ReplyCommentImageResponse
+	36, // 62: post.PostService.EditCommentImage:output_type -> post.EditCommentImageResponse
+	38, // 63: post.PostService.DeleteCommentImage:output_type -> post.DeleteCommentImageResponse
+	40, // 64: post.PostService.CountPostComment:output_type -> post.CountPostCommentResponse
+	42, // 65: post.PostService.CountPostReaction:output_type -> post.CountPostReactionResponse
+	44, // 66: post.PostService.CountPostShare:output_type -> post.CountPostShareResponse
+	47, // 67: post.PostService.GetPostComment:output_type -> post.GetPostCommentResponse
+	49, // 68: post.PostService.GetPostReaction:output_type -> post.GetPostReactionResponse
+	56, // 69: post.PostService.GetPostMediaComment:output_type -> post.GetPostMediaCommentResponse
+	58, // 70: post.PostService.GetWallPostList:output_type -> post.GetWallPostListResponse
+	64, // 71: post.PostService.GetNewFeeds:output_type -> post.GetNewFeedsResponse
+	45, // [45:72] is the sub-list for method output_type
+	18, // [18:45] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_proto_post_service_post_service_proto_init() }
@@ -4564,7 +4810,7 @@ func file_proto_post_service_post_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_proto_post_service_post_service_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   63,
+			NumMessages:   66,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
