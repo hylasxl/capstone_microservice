@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = "./otp_service";
+
+package otp;
+
+service OTPService {
+  rpc SendForgetPasswordOTP (SendForgetPasswordOTPRequest) returns (SendForgetPasswordOTPResponse);
+  rpc CheckValidOTP (CheckValidOTPRequest) returns (CheckValidOTPResponse);
+}
+
+message SendForgetPasswordOTPRequest {
+  uint64 AccountID = 1;
+  string Email = 2;
+}
+
+message SendForgetPasswordOTPResponse {
+  bool Success = 1;
+}
+
+message CheckValidOTPRequest {
+  uint64 AccountID = 1;
+  uint64 OTP = 2;
+}
+
+message CheckValidOTPResponse {
+  bool IsValid = 1;
+  uint32 Attempts = 2;
+}

@@ -12,4 +12,8 @@ func InitializeRoutes(router *mux.Router, clients *ServiceClients) {
 	InitializePingRoutes(router)
 	InitNotificationRoutes(router, clients)
 	InitPrivacyRoute(router, clients)
+	InitializeOTPRoutes(router, clients)
+	InitMonitoringRoutes(router)
+	InitWebsocketRoute(router, clients)
+	InitMessageRoutes(router, clients)
 }

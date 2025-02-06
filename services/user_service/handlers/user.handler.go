@@ -5,6 +5,7 @@ import (
 	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -134,6 +135,125 @@ func (svc *UserService) Signup(ctx context.Context, in *user_service.SignupReque
 	return &user_service.SignupResponse{
 		AccountId: strconv.Itoa(int(newAccount.ID)),
 	}, nil
+}
+
+func (svc *UserService) LoginWithGoogle(ctx context.Context, in *user_service.LoginWithGoogleRequest) (*user_service.LoginWithGoogleResponse, error) {
+	var accountInfo models.AccountInfo
+	var account models.Account
+
+	//checkToken
+
+	// Check if email exists in the system
+	if err := svc.DB.Where("email = ?", in.Email).First(&accountInfo).Error; err != nil {
+		// If email does not exist, create a new account
+		tx := svc.DB.Begin()
+
+		username, err := generateUsernameFromDisplayName(in.DisplayName, tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		newAccount := &models.Account{
+			Username:               username, // No username for Google login
+			Password:               "",       // No password for Google login
+			AccountRoleID:          1,
+			AccountCreatedByMethod: "google",
+		}
+		if err := tx.Create(newAccount).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		newAvatar := &models.AccountAvatar{
+			AccountID: newAccount.ID,
+			AvatarURL: in.PhotoURL,
+		}
+
+		if err := tx.Create(newAvatar).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		firstName, lastName := extractFirstAndLastName(in.DisplayName)
+
+		newAccountInfo := &models.AccountInfo{
+			Email:       in.Email,
+			AccountID:   newAccount.ID,
+			AvatarID:    newAvatar.ID,
+			DateOfBirth: time.Now(),
+			FirstName:   firstName,
+			LastName:    lastName,
+			Gender:      "other",
+		}
+		if err := tx.Create(newAccountInfo).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		tx.Commit()
+		return &user_service.LoginWithGoogleResponse{
+			Success:   true,
+			AccountID: uint64(newAccount.ID),
+		}, nil
+	}
+
+	// Check account linked to email
+	if err := svc.DB.Where("id = ?", accountInfo.AccountID).First(&account).Error; err != nil {
+		return nil, err
+	}
+
+	// Ensure the account is created via Google
+	if account.AccountCreatedByMethod != "google" {
+		return nil, errors.New("account is not created via Google")
+	}
+
+	// Successful Google login
+	return &user_service.LoginWithGoogleResponse{
+		Success:   true,
+		AccountID: uint64(account.ID),
+	}, nil
+}
+
+func generateUsernameFromDisplayName(displayName string, db *gorm.DB) (string, error) {
+	// Normalize the display name
+	username := strings.ToLower(displayName)
+	username = regexp.MustCompile(`[^a-z0-9]+`).ReplaceAllString(username, "_") // Replace non-alphanumeric chars with "_"
+	username = strings.Trim(username, "_")                                      // Trim leading/trailing "_"
+
+	// Ensure uniqueness
+	originalUsername := username
+	for i := 1; ; i++ {
+		var count int64
+		db.Model(&models.Account{}).Where("username = ?", username).Count(&count)
+		if count == 0 {
+			break // Username is unique
+		}
+		username = originalUsername + "_" + strconv.Itoa(i)
+	}
+
+	return username, nil
+}
+
+func extractFirstAndLastName(displayName string) (string, string) {
+	// Split the display name into words
+	nameParts := strings.Fields(displayName)
+
+	// If there are no parts, return empty strings
+	if len(nameParts) == 0 {
+		return "", ""
+	}
+
+	// First name is the first part
+	firstName := nameParts[0]
+
+	// Last name is the last part if there are multiple parts, otherwise empty
+	lastName := ""
+	if len(nameParts) > 1 {
+		lastName = nameParts[len(nameParts)-1]
+	}
+
+	return firstName, lastName
 }
 
 func validateSignupInput(in *user_service.SignupRequest) error {
@@ -585,4 +705,61 @@ func (svc *UserService) ChangeAvatar(ctx context.Context, in *user_service.Chang
 	return &user_service.ChangeAvatarResponse{
 		Success: true,
 	}, nil
+}
+
+func (svc *UserService) VerifyUsernameAndEmail(ctx context.Context, in *user_service.VerifyUsernameAndEmailRequest) (*user_service.VerifyUsernameAndEmailResponse, error) {
+
+	var existingUsername models.Account
+	if err := svc.DB.Where("username = ?", in.Username).First(&existingUsername).Error; err != nil {
+		return &user_service.VerifyUsernameAndEmailResponse{
+			Success: false,
+		}, nil
+	}
+
+	var existingEmail models.AccountInfo
+	if err := svc.DB.Where("email = ? AND account_id = ?", in.Email, existingUsername.ID).First(&existingEmail).Error; err != nil {
+		return &user_service.VerifyUsernameAndEmailResponse{
+			Success: false,
+		}, nil
+	}
+
+	return &user_service.VerifyUsernameAndEmailResponse{
+		Success: true,
+		UserID:  int64(existingUsername.ID),
+	}, nil
+}
+
+func (svc *UserService) ChangePassword(ctx context.Context, in *user_service.ChangePasswordRequest) (*user_service.ChangePasswordResponse, error) {
+
+	if in.AccountID <= 0 {
+		return &user_service.ChangePasswordResponse{
+			Success: false,
+		}, errors.New("invalid account id")
+	}
+
+	var existingUsername models.Account
+	if err := svc.DB.Where("id = ?", in.AccountID).First(&existingUsername).Error; err != nil {
+		return &user_service.ChangePasswordResponse{
+			Success: false,
+		}, err
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(in.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return &user_service.ChangePasswordResponse{
+			Success: false,
+		}, err
+	}
+
+	existingUsername.Password = string(hashedPassword)
+	if err := svc.DB.Save(&existingUsername).Error; err != nil {
+		return &user_service.ChangePasswordResponse{
+			Success: false,
+		}, err
+	}
+
+	return &user_service.ChangePasswordResponse{
+		Success: true,
+	}, nil
+
 }

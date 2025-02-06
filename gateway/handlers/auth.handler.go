@@ -155,5 +155,7 @@ func HandlerSignUp(userClient user_service.UserServiceClient, privacyClient priv
 			log.Printf("Error encoding response: %v", err)
 			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
 		}
+
+		
 	}
 }

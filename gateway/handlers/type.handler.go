@@ -565,3 +565,128 @@ type ChangeAvatarRequest struct {
 	AccountID uint64 `json:"account_id"`
 	Avatar    string `json:"avatar"`
 }
+
+type GetNotificationRequest struct {
+	AccountID uint64 `json:"account_id"`
+	Page      uint64 `json:"page"`
+	PageSize  uint64 `json:"page_size"`
+}
+
+type GetNotificationResponse struct {
+	AccountID     uint64                `json:"account_id"`
+	Page          uint64                `json:"page"`
+	PageSize      uint64                `json:"page_size"`
+	Notifications []NotificationContent `json:"notifications"`
+}
+
+type NotificationContent struct {
+	ID       uint64 `json:"id"`
+	Content  string `json:"content"`
+	DateTime int64  `json:"date_time"`
+	IsRead   bool   `json:"is_read"`
+}
+
+type LoginWithGoogleRequest struct {
+	Email       string `json:"email"`
+	DisplayName string `json:"display_name"`
+	PhotoURL    string `json:"photo_url"`
+	AuthCode    string `json:"auth_code"`
+}
+
+type LoginWithGoogleResponse struct {
+	AccessToken  string                  `json:"access_token"`
+	RefreshToken string                  `json:"refresh_token"`
+	UserID       string                  `json:"user_id"`
+	JWTClaims    *auth_service.JWTClaims `json:"jwt_claims"`
+	Success      bool                    `json:"success"`
+}
+
+type VerifyUsernameAndEmailRequest struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
+}
+
+type VerifyUsernameAndEmailResponse struct {
+	Success bool   `json:"success"`
+	UserID  uint64 `json:"user_id"`
+}
+
+type SendOTPForgetPasswordMessageRequest struct {
+	AccountID uint64 `json:"account_id"`
+	Email     string `json:"email"`
+}
+
+type SendOTPForgetPasswordMessageResponse struct {
+	Success bool `json:"success"`
+}
+
+type CheckValidOTPRequest struct {
+	AccountID uint64 `json:"account_id"`
+	OTP       int    `json:"otp"`
+}
+type CheckValidOTPResponse struct {
+	Success  bool `json:"success"`
+	Attempts int  `json:"attempts"`
+}
+
+type ChangePasswordRequest struct {
+	AccountID   uint64 `json:"account_id"`
+	NewPassword string `json:"new_password"`
+}
+
+type ChangePasswordResponse struct {
+	Success bool `json:"success"`
+}
+
+type CheckIsFollowRequest struct {
+	FromAccountID uint64 `json:"from_account_id"`
+	ToAccountID   uint64 `json:"to_account_id"`
+}
+
+type CheckIsFollowResponse struct {
+	IsFollowed bool `json:"is_follow"`
+}
+
+type CheckIsBlockedRequest struct {
+	FromAccountID uint64 `json:"from_account_id"`
+	ToAccountID   uint64 `json:"to_account_id"`
+}
+
+type CheckIsBlockedResponse struct {
+	IsBlocked bool `json:"is_block"`
+}
+
+type CountUnreadNotiRequest struct {
+	AccountID uint64 `json:"account_id"`
+}
+
+type CountUnreadNotiResponse struct {
+	Quantity uint64 `json:"quantity"`
+}
+
+type MarkAsReadNotiRequest struct {
+	AccountID uint64 `json:"account_id"`
+}
+
+type MarkAsReadNotiResponse struct {
+	Quantity uint64 `json:"quantity"`
+	Success  bool   `json:"success"`
+}
+
+type ChatList struct {
+	AccountID             uint64 `json:"account_id"`
+	TargetAccountID       uint64 `json:"target_account_id"`
+	DisplayName           string `json:"display_name"`
+	AvatarURL             string `json:"avatar_url"`
+	LastMessageTimestamp  int64  `json:"last_message_timestamp"`
+	LastMessageContent    string `json:"last_message_content"`
+	UnreadMessageQuantity uint64 `json:"unread_message_quantity"`
+	Page                  uint32 `json:"page"`
+	PageSize              uint32 `json:"page_size"`
+}
+
+type GetChatListRequest struct {
+	AccountID uint64 `json:"account_id"`
+	Page      uint32 `json:"page"`
+	PageSize  uint32 `json:"page_size"`
+}

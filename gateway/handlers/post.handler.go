@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"gateway/proto/friend_service"
 	"gateway/proto/moderation_service"
+	"gateway/proto/notification_service"
 	"gateway/proto/post_service"
 	"gateway/proto/user_service"
 	"github.com/gorilla/mux"
@@ -227,7 +228,7 @@ func HandlerSharePost(postClient post_service.PostServiceClient, userClient user
 	}
 }
 
-func HandlerCommentPost(postClient post_service.PostServiceClient, userClient user_service.UserServiceClient, moderationClient moderation_service.ModerationServiceClient) http.HandlerFunc {
+func HandlerCommentPost(postClient post_service.PostServiceClient, userClient user_service.UserServiceClient, moderationClient moderation_service.ModerationServiceClient, notificationClient notification_service.NotificationServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request CommentPostRequest
 		err := json.NewDecoder(r.Body).Decode(&request)
@@ -267,8 +268,6 @@ func HandlerCommentPost(postClient post_service.PostServiceClient, userClient us
 			AccountID: request.AccountID,
 		})
 
-		var response CommentPostResponse
-
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, "", errors.New("failed to comment post"))
 			return
@@ -278,6 +277,27 @@ func HandlerCommentPost(postClient post_service.PostServiceClient, userClient us
 			respondWithError(w, http.StatusInternalServerError, "", errors.New(commentResp.Error))
 			return
 		}
+
+		userDataResp, err := userClient.GetAccountInfo(ctx, &user_service.GetAccountInfoRequest{
+			AccountID: uint32(request.AccountID),
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "", errors.New("failed to get account info"))
+			return
+		}
+
+		_, err = notificationClient.CommentNotification(ctx, &notification_service.CommentNotificationRequest{
+			ReceiverAccountID:        int64(commentResp.PostAccountID),
+			SenderAccountID:          int64(request.AccountID),
+			SenderAccountDisplayName: userDataResp.AccountInfo.FirstName + " " + userDataResp.AccountInfo.LastName,
+		})
+
+		if err != nil {
+			return
+		}
+
+		response := &CommentPostResponse{}
 
 		response.Success = true
 		response.CommentID = commentResp.CommentID
@@ -289,7 +309,7 @@ func HandlerCommentPost(postClient post_service.PostServiceClient, userClient us
 		}
 	}
 }
-func HandlerReplyComment(postClient post_service.PostServiceClient, userClient user_service.UserServiceClient, moderationClient moderation_service.ModerationServiceClient) http.HandlerFunc {
+func HandlerReplyComment(postClient post_service.PostServiceClient, userClient user_service.UserServiceClient, moderationClient moderation_service.ModerationServiceClient, notificationClient notification_service.NotificationServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var response ReplyCommentResponse
 
@@ -344,6 +364,25 @@ func HandlerReplyComment(postClient post_service.PostServiceClient, userClient u
 
 		if commentResp.Error != "" {
 			respondWithError(w, http.StatusInternalServerError, "Failed to reply to comment", fmt.Errorf(commentResp.Error))
+			return
+		}
+
+		userDataResp, err := userClient.GetAccountInfo(ctx, &user_service.GetAccountInfoRequest{
+			AccountID: uint32(request.AccountID),
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "", errors.New("failed to get account info"))
+			return
+		}
+
+		_, err = notificationClient.ReplyCommentNotification(ctx, &notification_service.ReplyCommentNotificationRequest{
+			ReceiverAccountID:        int64(commentResp.PostCommentID),
+			SenderAccountID:          int64(request.AccountID),
+			SenderAccountDisplayName: userDataResp.AccountInfo.FirstName + " " + userDataResp.AccountInfo.LastName,
+		})
+
+		if err != nil {
 			return
 		}
 

@@ -19,7 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	NotificationService_RegisterDevice_FullMethodName = "/notification.NotificationService/RegisterDevice"
+	NotificationService_RegisterDevice_FullMethodName                      = "/notification.NotificationService/RegisterDevice"
+	NotificationService_ReceiveFriendRequestNotificationFnc_FullMethodName = "/notification.NotificationService/ReceiveFriendRequestNotificationFnc"
+	NotificationService_CommentNotification_FullMethodName                 = "/notification.NotificationService/CommentNotification"
+	NotificationService_ReplyCommentNotification_FullMethodName            = "/notification.NotificationService/ReplyCommentNotification"
+	NotificationService_ReactPostNotification_FullMethodName               = "/notification.NotificationService/ReactPostNotification"
+	NotificationService_SharePostNotification_FullMethodName               = "/notification.NotificationService/SharePostNotification"
+	NotificationService_FollowNotification_FullMethodName                  = "/notification.NotificationService/FollowNotification"
+	NotificationService_MessageNotification_FullMethodName                 = "/notification.NotificationService/MessageNotification"
+	NotificationService_GetNotification_FullMethodName                     = "/notification.NotificationService/GetNotification"
+	NotificationService_MarkAsReadNoti_FullMethodName                      = "/notification.NotificationService/MarkAsReadNoti"
+	NotificationService_CountUnReadNoti_FullMethodName                     = "/notification.NotificationService/CountUnReadNoti"
 )
 
 // NotificationServiceClient is the client API for NotificationService service.
@@ -27,6 +37,16 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NotificationServiceClient interface {
 	RegisterDevice(ctx context.Context, in *RegisterDeviceRequest, opts ...grpc.CallOption) (*RegisterDeviceResponse, error)
+	ReceiveFriendRequestNotificationFnc(ctx context.Context, in *ReceiveFriendRequestNotification, opts ...grpc.CallOption) (*SingleMessageSentResponse, error)
+	CommentNotification(ctx context.Context, in *CommentNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error)
+	ReplyCommentNotification(ctx context.Context, in *ReplyCommentNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error)
+	ReactPostNotification(ctx context.Context, in *ReactPostNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error)
+	SharePostNotification(ctx context.Context, in *SharePostNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error)
+	FollowNotification(ctx context.Context, in *FollowNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error)
+	MessageNotification(ctx context.Context, in *MessageNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error)
+	GetNotification(ctx context.Context, in *GetNotificationRequest, opts ...grpc.CallOption) (*GetNotificationResponse, error)
+	MarkAsReadNoti(ctx context.Context, in *MarkAsReadNotiRequest, opts ...grpc.CallOption) (*MarkAsReadNotiResponse, error)
+	CountUnReadNoti(ctx context.Context, in *CountUnreadNotiRequest, opts ...grpc.CallOption) (*CountUnreadNotiResponse, error)
 }
 
 type notificationServiceClient struct {
@@ -47,11 +67,121 @@ func (c *notificationServiceClient) RegisterDevice(ctx context.Context, in *Regi
 	return out, nil
 }
 
+func (c *notificationServiceClient) ReceiveFriendRequestNotificationFnc(ctx context.Context, in *ReceiveFriendRequestNotification, opts ...grpc.CallOption) (*SingleMessageSentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleMessageSentResponse)
+	err := c.cc.Invoke(ctx, NotificationService_ReceiveFriendRequestNotificationFnc_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) CommentNotification(ctx context.Context, in *CommentNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleMessageSentResponse)
+	err := c.cc.Invoke(ctx, NotificationService_CommentNotification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) ReplyCommentNotification(ctx context.Context, in *ReplyCommentNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleMessageSentResponse)
+	err := c.cc.Invoke(ctx, NotificationService_ReplyCommentNotification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) ReactPostNotification(ctx context.Context, in *ReactPostNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleMessageSentResponse)
+	err := c.cc.Invoke(ctx, NotificationService_ReactPostNotification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) SharePostNotification(ctx context.Context, in *SharePostNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleMessageSentResponse)
+	err := c.cc.Invoke(ctx, NotificationService_SharePostNotification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) FollowNotification(ctx context.Context, in *FollowNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleMessageSentResponse)
+	err := c.cc.Invoke(ctx, NotificationService_FollowNotification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) MessageNotification(ctx context.Context, in *MessageNotificationRequest, opts ...grpc.CallOption) (*SingleMessageSentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleMessageSentResponse)
+	err := c.cc.Invoke(ctx, NotificationService_MessageNotification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) GetNotification(ctx context.Context, in *GetNotificationRequest, opts ...grpc.CallOption) (*GetNotificationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetNotificationResponse)
+	err := c.cc.Invoke(ctx, NotificationService_GetNotification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) MarkAsReadNoti(ctx context.Context, in *MarkAsReadNotiRequest, opts ...grpc.CallOption) (*MarkAsReadNotiResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MarkAsReadNotiResponse)
+	err := c.cc.Invoke(ctx, NotificationService_MarkAsReadNoti_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) CountUnReadNoti(ctx context.Context, in *CountUnreadNotiRequest, opts ...grpc.CallOption) (*CountUnreadNotiResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CountUnreadNotiResponse)
+	err := c.cc.Invoke(ctx, NotificationService_CountUnReadNoti_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NotificationServiceServer is the server API for NotificationService service.
 // All implementations must embed UnimplementedNotificationServiceServer
 // for forward compatibility.
 type NotificationServiceServer interface {
 	RegisterDevice(context.Context, *RegisterDeviceRequest) (*RegisterDeviceResponse, error)
+	ReceiveFriendRequestNotificationFnc(context.Context, *ReceiveFriendRequestNotification) (*SingleMessageSentResponse, error)
+	CommentNotification(context.Context, *CommentNotificationRequest) (*SingleMessageSentResponse, error)
+	ReplyCommentNotification(context.Context, *ReplyCommentNotificationRequest) (*SingleMessageSentResponse, error)
+	ReactPostNotification(context.Context, *ReactPostNotificationRequest) (*SingleMessageSentResponse, error)
+	SharePostNotification(context.Context, *SharePostNotificationRequest) (*SingleMessageSentResponse, error)
+	FollowNotification(context.Context, *FollowNotificationRequest) (*SingleMessageSentResponse, error)
+	MessageNotification(context.Context, *MessageNotificationRequest) (*SingleMessageSentResponse, error)
+	GetNotification(context.Context, *GetNotificationRequest) (*GetNotificationResponse, error)
+	MarkAsReadNoti(context.Context, *MarkAsReadNotiRequest) (*MarkAsReadNotiResponse, error)
+	CountUnReadNoti(context.Context, *CountUnreadNotiRequest) (*CountUnreadNotiResponse, error)
 	mustEmbedUnimplementedNotificationServiceServer()
 }
 
@@ -64,6 +194,36 @@ type UnimplementedNotificationServiceServer struct{}
 
 func (UnimplementedNotificationServiceServer) RegisterDevice(context.Context, *RegisterDeviceRequest) (*RegisterDeviceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterDevice not implemented")
+}
+func (UnimplementedNotificationServiceServer) ReceiveFriendRequestNotificationFnc(context.Context, *ReceiveFriendRequestNotification) (*SingleMessageSentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReceiveFriendRequestNotificationFnc not implemented")
+}
+func (UnimplementedNotificationServiceServer) CommentNotification(context.Context, *CommentNotificationRequest) (*SingleMessageSentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CommentNotification not implemented")
+}
+func (UnimplementedNotificationServiceServer) ReplyCommentNotification(context.Context, *ReplyCommentNotificationRequest) (*SingleMessageSentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReplyCommentNotification not implemented")
+}
+func (UnimplementedNotificationServiceServer) ReactPostNotification(context.Context, *ReactPostNotificationRequest) (*SingleMessageSentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReactPostNotification not implemented")
+}
+func (UnimplementedNotificationServiceServer) SharePostNotification(context.Context, *SharePostNotificationRequest) (*SingleMessageSentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SharePostNotification not implemented")
+}
+func (UnimplementedNotificationServiceServer) FollowNotification(context.Context, *FollowNotificationRequest) (*SingleMessageSentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FollowNotification not implemented")
+}
+func (UnimplementedNotificationServiceServer) MessageNotification(context.Context, *MessageNotificationRequest) (*SingleMessageSentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MessageNotification not implemented")
+}
+func (UnimplementedNotificationServiceServer) GetNotification(context.Context, *GetNotificationRequest) (*GetNotificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNotification not implemented")
+}
+func (UnimplementedNotificationServiceServer) MarkAsReadNoti(context.Context, *MarkAsReadNotiRequest) (*MarkAsReadNotiResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkAsReadNoti not implemented")
+}
+func (UnimplementedNotificationServiceServer) CountUnReadNoti(context.Context, *CountUnreadNotiRequest) (*CountUnreadNotiResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CountUnReadNoti not implemented")
 }
 func (UnimplementedNotificationServiceServer) mustEmbedUnimplementedNotificationServiceServer() {}
 func (UnimplementedNotificationServiceServer) testEmbeddedByValue()                             {}
@@ -104,6 +264,186 @@ func _NotificationService_RegisterDevice_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NotificationService_ReceiveFriendRequestNotificationFnc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReceiveFriendRequestNotification)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).ReceiveFriendRequestNotificationFnc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_ReceiveFriendRequestNotificationFnc_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).ReceiveFriendRequestNotificationFnc(ctx, req.(*ReceiveFriendRequestNotification))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_CommentNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommentNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).CommentNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_CommentNotification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).CommentNotification(ctx, req.(*CommentNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_ReplyCommentNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplyCommentNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).ReplyCommentNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_ReplyCommentNotification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).ReplyCommentNotification(ctx, req.(*ReplyCommentNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_ReactPostNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReactPostNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).ReactPostNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_ReactPostNotification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).ReactPostNotification(ctx, req.(*ReactPostNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_SharePostNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SharePostNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).SharePostNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_SharePostNotification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).SharePostNotification(ctx, req.(*SharePostNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_FollowNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FollowNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).FollowNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_FollowNotification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).FollowNotification(ctx, req.(*FollowNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_MessageNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MessageNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).MessageNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_MessageNotification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).MessageNotification(ctx, req.(*MessageNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_GetNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).GetNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_GetNotification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).GetNotification(ctx, req.(*GetNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_MarkAsReadNoti_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkAsReadNotiRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).MarkAsReadNoti(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_MarkAsReadNoti_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).MarkAsReadNoti(ctx, req.(*MarkAsReadNotiRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_CountUnReadNoti_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CountUnreadNotiRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).CountUnReadNoti(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_CountUnReadNoti_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).CountUnReadNoti(ctx, req.(*CountUnreadNotiRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NotificationService_ServiceDesc is the grpc.ServiceDesc for NotificationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +454,46 @@ var NotificationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterDevice",
 			Handler:    _NotificationService_RegisterDevice_Handler,
+		},
+		{
+			MethodName: "ReceiveFriendRequestNotificationFnc",
+			Handler:    _NotificationService_ReceiveFriendRequestNotificationFnc_Handler,
+		},
+		{
+			MethodName: "CommentNotification",
+			Handler:    _NotificationService_CommentNotification_Handler,
+		},
+		{
+			MethodName: "ReplyCommentNotification",
+			Handler:    _NotificationService_ReplyCommentNotification_Handler,
+		},
+		{
+			MethodName: "ReactPostNotification",
+			Handler:    _NotificationService_ReactPostNotification_Handler,
+		},
+		{
+			MethodName: "SharePostNotification",
+			Handler:    _NotificationService_SharePostNotification_Handler,
+		},
+		{
+			MethodName: "FollowNotification",
+			Handler:    _NotificationService_FollowNotification_Handler,
+		},
+		{
+			MethodName: "MessageNotification",
+			Handler:    _NotificationService_MessageNotification_Handler,
+		},
+		{
+			MethodName: "GetNotification",
+			Handler:    _NotificationService_GetNotification_Handler,
+		},
+		{
+			MethodName: "MarkAsReadNoti",
+			Handler:    _NotificationService_MarkAsReadNoti_Handler,
+		},
+		{
+			MethodName: "CountUnReadNoti",
+			Handler:    _NotificationService_CountUnReadNoti_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

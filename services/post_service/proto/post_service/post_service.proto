@@ -89,6 +89,7 @@ message CommentPostRequest {
 message CommentPostResponse {
   string Error = 1;
   int64 CommentID = 2;
+  uint64 PostAccountID = 3;
 }
 
 message GetSinglePostRequest {
@@ -136,6 +137,7 @@ message ReplyCommentRequest {
 message ReplyCommentResponse {
   uint64 ReplyCommentID = 1;
   string Error = 2;
+  uint64 PostCommentID = 3;
 }
 
 message EditCommentRequest {

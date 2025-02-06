@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+option go_package = "./message_service";
+
+package message;
+
+service MessageService {
+  rpc GetChatHistory (ChatHistoryRequest) returns (ChatHistoryResponse);
+  rpc ChatStream (stream ChatMessage) returns (stream ChatMessageReturn);
+  rpc GetChatList (GetChatListRequest) returns (GetChatListResponse);
+}
+
+message ChatMessage {
+  uint32 SenderID = 1;
+  uint32 ReceiverID = 2;
+  string Content = 3;
+  int64 timestamp = 4;
+}
+
+message ChatMessageReturn{
+  int64 timestamp = 1;
+  bool success = 2;
+  uint32 ReceiverID = 3;
+  string Content = 4;
+}
+
+message Message {
+  string sender_id = 1;
+  string receiver_id = 2;
+  int64 timestamp = 3;
+
+  oneof content {
+    string text = 4;
+    bytes image = 5;
+  }
+}
+
+message Ack {
+  string status = 1;
+}
+
+message ChatRequest {
+  string user_id = 1;
+}
+
+message ChatResponse {
+  string sender_id = 1;
+  string content = 2;
+  int64 timestamp = 3;
+}
+
+message ChatHistoryRequest {
+  string user_id = 1;
+  string peer_id = 2;
+}
+
+message ChatHistoryResponse {
+  repeated Message messages = 1;
+}
+
+message GetChatListRequest {
+  uint32 AccountID = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+}
+
+message GetChatListResponse {
+  repeated ChatList ChatList = 1;
+}
+
+message ChatList {
+  uint32 AccountID = 1;
+  uint32 TargetAccountID = 2;
+  string DisplayName = 3;
+  string AvatarURL = 4;
+  int64 LastMessageTimestamp = 5;
+  string LastMessageContent = 6;
+  uint64 UnreadMessageQuantity = 7;
+  uint32 Page = 8;
+  uint32 PageSize = 9;
+}

@@ -25,6 +25,10 @@ const (
 	FriendService_GetListFriend_FullMethodName        = "/friend.FriendService/GetListFriend"
 	FriendService_GetPendingList_FullMethodName       = "/friend.FriendService/GetPendingList"
 	FriendService_Unfriend_FullMethodName             = "/friend.FriendService/Unfriend"
+	FriendService_Unfollow_FullMethodName             = "/friend.FriendService/Unfollow"
+	FriendService_Unblock_FullMethodName              = "/friend.FriendService/Unblock"
+	FriendService_Follow_FullMethodName               = "/friend.FriendService/Follow"
+	FriendService_Block_FullMethodName                = "/friend.FriendService/Block"
 	FriendService_ResolveFriendRequest_FullMethodName = "/friend.FriendService/ResolveFriendRequest"
 	FriendService_RecallFriendRequest_FullMethodName  = "/friend.FriendService/RecallFriendRequest"
 	FriendService_CountPending_FullMethodName         = "/friend.FriendService/CountPending"
@@ -45,6 +49,10 @@ type FriendServiceClient interface {
 	GetListFriend(ctx context.Context, in *GetListFriendRequest, opts ...grpc.CallOption) (*GetListFriendResponse, error)
 	GetPendingList(ctx context.Context, in *GetPendingListRequest, opts ...grpc.CallOption) (*GetPendingListResponse, error)
 	Unfriend(ctx context.Context, in *UnfriendRequest, opts ...grpc.CallOption) (*UnfriendResponse, error)
+	Unfollow(ctx context.Context, in *UnfollowRequest, opts ...grpc.CallOption) (*SingleStatusResponse, error)
+	Unblock(ctx context.Context, in *UnblockRequest, opts ...grpc.CallOption) (*SingleStatusResponse, error)
+	Follow(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*SingleStatusResponse, error)
+	Block(ctx context.Context, in *BlockRequest, opts ...grpc.CallOption) (*SingleStatusResponse, error)
 	ResolveFriendRequest(ctx context.Context, in *FriendListResolveRequest, opts ...grpc.CallOption) (*FriendListResolveResponse, error)
 	RecallFriendRequest(ctx context.Context, in *RecallRequest, opts ...grpc.CallOption) (*RecallResponse, error)
 	CountPending(ctx context.Context, in *CountPendingRequest, opts ...grpc.CallOption) (*CountPendingResponse, error)
@@ -117,6 +125,46 @@ func (c *friendServiceClient) Unfriend(ctx context.Context, in *UnfriendRequest,
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UnfriendResponse)
 	err := c.cc.Invoke(ctx, FriendService_Unfriend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *friendServiceClient) Unfollow(ctx context.Context, in *UnfollowRequest, opts ...grpc.CallOption) (*SingleStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleStatusResponse)
+	err := c.cc.Invoke(ctx, FriendService_Unfollow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *friendServiceClient) Unblock(ctx context.Context, in *UnblockRequest, opts ...grpc.CallOption) (*SingleStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleStatusResponse)
+	err := c.cc.Invoke(ctx, FriendService_Unblock_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *friendServiceClient) Follow(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*SingleStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleStatusResponse)
+	err := c.cc.Invoke(ctx, FriendService_Follow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *friendServiceClient) Block(ctx context.Context, in *BlockRequest, opts ...grpc.CallOption) (*SingleStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleStatusResponse)
+	err := c.cc.Invoke(ctx, FriendService_Block_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -213,6 +261,10 @@ type FriendServiceServer interface {
 	GetListFriend(context.Context, *GetListFriendRequest) (*GetListFriendResponse, error)
 	GetPendingList(context.Context, *GetPendingListRequest) (*GetPendingListResponse, error)
 	Unfriend(context.Context, *UnfriendRequest) (*UnfriendResponse, error)
+	Unfollow(context.Context, *UnfollowRequest) (*SingleStatusResponse, error)
+	Unblock(context.Context, *UnblockRequest) (*SingleStatusResponse, error)
+	Follow(context.Context, *FollowRequest) (*SingleStatusResponse, error)
+	Block(context.Context, *BlockRequest) (*SingleStatusResponse, error)
 	ResolveFriendRequest(context.Context, *FriendListResolveRequest) (*FriendListResolveResponse, error)
 	RecallFriendRequest(context.Context, *RecallRequest) (*RecallResponse, error)
 	CountPending(context.Context, *CountPendingRequest) (*CountPendingResponse, error)
@@ -248,6 +300,18 @@ func (UnimplementedFriendServiceServer) GetPendingList(context.Context, *GetPend
 }
 func (UnimplementedFriendServiceServer) Unfriend(context.Context, *UnfriendRequest) (*UnfriendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Unfriend not implemented")
+}
+func (UnimplementedFriendServiceServer) Unfollow(context.Context, *UnfollowRequest) (*SingleStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Unfollow not implemented")
+}
+func (UnimplementedFriendServiceServer) Unblock(context.Context, *UnblockRequest) (*SingleStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Unblock not implemented")
+}
+func (UnimplementedFriendServiceServer) Follow(context.Context, *FollowRequest) (*SingleStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Follow not implemented")
+}
+func (UnimplementedFriendServiceServer) Block(context.Context, *BlockRequest) (*SingleStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Block not implemented")
 }
 func (UnimplementedFriendServiceServer) ResolveFriendRequest(context.Context, *FriendListResolveRequest) (*FriendListResolveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ResolveFriendRequest not implemented")
@@ -398,6 +462,78 @@ func _FriendService_Unfriend_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FriendServiceServer).Unfriend(ctx, req.(*UnfriendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FriendService_Unfollow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnfollowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).Unfollow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_Unfollow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).Unfollow(ctx, req.(*UnfollowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FriendService_Unblock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnblockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).Unblock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_Unblock_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).Unblock(ctx, req.(*UnblockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FriendService_Follow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FollowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).Follow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_Follow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).Follow(ctx, req.(*FollowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FriendService_Block_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BlockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).Block(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_Block_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).Block(ctx, req.(*BlockRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -576,6 +712,22 @@ var FriendService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Unfriend",
 			Handler:    _FriendService_Unfriend_Handler,
+		},
+		{
+			MethodName: "Unfollow",
+			Handler:    _FriendService_Unfollow_Handler,
+		},
+		{
+			MethodName: "Unblock",
+			Handler:    _FriendService_Unblock_Handler,
+		},
+		{
+			MethodName: "Follow",
+			Handler:    _FriendService_Follow_Handler,
+		},
+		{
+			MethodName: "Block",
+			Handler:    _FriendService_Block_Handler,
 		},
 		{
 			MethodName: "ResolveFriendRequest",

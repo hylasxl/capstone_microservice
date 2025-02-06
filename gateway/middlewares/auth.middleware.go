@@ -2,7 +2,9 @@ package middlewares
 
 import (
 	"context"
+	"encoding/json"
 	"gateway/proto/auth_service"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -14,13 +16,15 @@ func AuthMiddleware(authService auth_service.AuthServiceClient) func(http.Handle
 
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				respondWithError(w, http.StatusUnauthorized, "no auth header provided", nil)
 				return
 			}
 
+			println(authHeader)
+
 			token := strings.TrimPrefix(authHeader, "Bearer ")
 			if token == "" {
-				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				respondWithError(w, http.StatusUnauthorized, "no token provided", nil)
 				return
 			}
 
@@ -29,16 +33,19 @@ func AuthMiddleware(authService auth_service.AuthServiceClient) func(http.Handle
 
 			res, err := authService.ValidateToken(ctx, &auth_service.ValidateTokenRequest{Token: token})
 			if err != nil || !res.Valid {
-				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				respondWithError(w, http.StatusUnauthorized, res.ErrorMessage, nil)
 				return
 			}
 
 			isAuthorized, err := hasRequiredPermission(r.URL.Path, res.Permissions)
+			log.Println(r.URL.Path)
 			if err != nil {
-				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				respondWithError(w, http.StatusInternalServerError, "permission check failed", nil)
+				return
 			}
 			if !isAuthorized {
-				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+				respondWithError(w, http.StatusUnauthorized, "user is unauthorized with this url permission", nil)
+				return
 			}
 
 			ctx = context.WithValue(ctx, "userId", res.UserId)
@@ -54,4 +61,23 @@ func hasRequiredPermission(requestURL string, permissions []string) (bool, error
 		}
 	}
 	return false, nil
+}
+
+func respondWithError(w http.ResponseWriter, statusCode int, message string, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+
+	errorResponse := map[string]interface{}{
+		"success": false,
+		"error":   message,
+	}
+
+	if err != nil {
+		errorResponse["details"] = err.Error()
+	}
+
+	err = json.NewEncoder(w).Encode(errorResponse)
+	if err != nil {
+		return
+	}
 }

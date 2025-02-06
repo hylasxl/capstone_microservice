@@ -4,8 +4,10 @@ import (
 	"fmt"
 	authpb "gateway/proto/auth_service"
 	friendpb "gateway/proto/friend_service"
+	messagepb "gateway/proto/message_service"
 	moderationpb "gateway/proto/moderation_service"
 	"gateway/proto/notification_service"
+	"gateway/proto/otp_service"
 	postpb "gateway/proto/post_service"
 	privacypb "gateway/proto/privacy_service"
 	userpb "gateway/proto/user_service"
@@ -25,6 +27,8 @@ type ServiceClients struct {
 	FriendService       friendpb.FriendServiceClient
 	PostService         postpb.PostServiceClient
 	ModerationService   moderationpb.ModerationServiceClient
+	MessageService      messagepb.MessageServiceClient
+	OTPService          otp_service.OTPServiceClient
 	NotificationService notification_service.NotificationServiceClient
 	Connections         []*grpc.ClientConn
 }
@@ -70,6 +74,10 @@ func InitializeServiceClients() (*ServiceClients, error) {
 			clients.ModerationService = moderationpb.NewModerationServiceClient(conn)
 		case "notificationService":
 			clients.NotificationService = notification_service.NewNotificationServiceClient(conn)
+		case "otpService":
+			clients.OTPService = otp_service.NewOTPServiceClient(conn)
+		case "messageService":
+			clients.MessageService = messagepb.NewMessageServiceClient(conn)
 		}
 	}
 

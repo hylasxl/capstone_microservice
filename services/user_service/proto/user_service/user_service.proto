@@ -16,6 +16,9 @@ service UserService {
   rpc GetProfileInfo (GetProfileInfoRequest) returns (GetProfileInfoResponse);
   rpc ChangeAccountInfo (ChangeAccountDataRequest) returns (ChangeAccountDataResponse);
   rpc ChangeAvatar (ChangeAvatarRequest) returns (ChangeAvatarResponse);
+  rpc LoginWithGoogle (LoginWithGoogleRequest) returns (LoginWithGoogleResponse);
+  rpc VerifyUsernameAndEmail (VerifyUsernameAndEmailRequest) returns (VerifyUsernameAndEmailResponse);
+  rpc ChangePassword (ChangePasswordRequest) returns (ChangePasswordResponse);
 }
 
 message LoginRequest {
@@ -181,5 +184,36 @@ message ChangeAvatarRequest {
 }
 
 message ChangeAvatarResponse {
+  bool Success = 1;
+}
+
+message LoginWithGoogleRequest {
+  string Email = 1;
+  string DisplayName = 2;
+  string PhotoURL = 3;
+  string AuthCode = 4;
+}
+
+message LoginWithGoogleResponse {
+  bool Success = 1;
+  uint64 AccountID = 2;
+}
+
+message VerifyUsernameAndEmailRequest {
+  string Username = 1;
+  string Email = 2;
+}
+
+message VerifyUsernameAndEmailResponse {
+  bool Success = 1;
+  int64 UserID = 2;
+}
+
+message ChangePasswordRequest {
+  uint64 AccountID = 1;
+  string NewPassword = 2;
+}
+
+message ChangePasswordResponse {
   bool Success = 1;
 }

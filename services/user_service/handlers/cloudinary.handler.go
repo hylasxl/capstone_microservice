@@ -43,7 +43,8 @@ func (cs *CloudinaryService) UploadAvatar(data []byte) (string, error) {
 	}
 	imageReader := bytes.NewReader(data)
 	uploadParams := uploader.UploadParams{
-		Folder: "user_profile_image",
+		Folder:         "user_profile_image",
+		Transformation: "c_limit,w_1200,h_1200,q_auto:low",
 	}
 	uploadResult, err := cs.Client.Upload.Upload(cs.Ctx, imageReader, uploadParams)
 	if err != nil {

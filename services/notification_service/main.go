@@ -5,13 +5,13 @@ import (
 	"firebase.google.com/go/v4"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
-
 	"log"
 	"net"
 	"notification_service/configs"
 	"notification_service/handlers"
 	"notification_service/models"
 	"notification_service/proto/notification_service"
+	"os"
 )
 
 func main() {
@@ -48,8 +48,14 @@ func main() {
 }
 
 func initFirebase() (*firebase.App, error) {
-	opt := option.WithCredentialsFile("./syncio-7a920-firebase-adminsdk-3esie-1b79ddb11e.json")
-	app, err := firebase.NewApp(context.Background(), nil, opt)
+	credentialsPath := os.Getenv("FIREBASE_CREDENTIALS")
+	if credentialsPath == "" {
+		log.Fatalf("FIREBASE_CREDENTIALS environment variable is not set")
+	}
+
+	opt := option.WithCredentialsFile(credentialsPath)
+	conf := &firebase.Config{ProjectID: "syncio-7a920"}
+	app, err := firebase.NewApp(context.Background(), conf, opt)
 	if err != nil {
 		return nil, err
 	}

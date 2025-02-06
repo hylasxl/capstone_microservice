@@ -15,8 +15,8 @@ func InitializePostRoutes(router *mux.Router, clients *ServiceClients) {
 
 	postRoutes.HandleFunc("/create-new-post", handlers.HandlerCreatePost(clients.PostService, clients.UserService, clients.ModerationService)).Methods("POST")
 	postRoutes.HandleFunc("/share-post", handlers.HandlerSharePost(clients.PostService, clients.UserService, clients.ModerationService)).Methods("POST")
-	postRoutes.HandleFunc("/comment-post", handlers.HandlerCommentPost(clients.PostService, clients.UserService, clients.ModerationService)).Methods("POST")
-	postRoutes.HandleFunc("/reply-comment-post", handlers.HandlerReplyComment(clients.PostService, clients.UserService, clients.ModerationService)).Methods("POST")
+	postRoutes.HandleFunc("/comment-post", handlers.HandlerCommentPost(clients.PostService, clients.UserService, clients.ModerationService, clients.NotificationService)).Methods("POST")
+	postRoutes.HandleFunc("/reply-comment-post", handlers.HandlerReplyComment(clients.PostService, clients.UserService, clients.ModerationService, clients.NotificationService)).Methods("POST")
 	postRoutes.HandleFunc("/react-post", handlers.HandlerReactPost(clients.PostService, clients.UserService)).Methods("POST")
 	postRoutes.HandleFunc("/react-image", handlers.HandlerReactImage(clients.PostService, clients.UserService)).Methods("POST")
 	postRoutes.HandleFunc("/comment-image", handlers.HandlerCommentImage(clients.PostService, clients.UserService, clients.ModerationService)).Methods("POST")

@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"gateway/proto/friend_service"
+	"gateway/proto/notification_service"
 	"gateway/proto/user_service"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func HandlerSendFriendRequest(friendClient friend_service.FriendServiceClient, userClient user_service.UserServiceClient) http.HandlerFunc {
+func HandlerSendFriendRequest(friendClient friend_service.FriendServiceClient, userClient user_service.UserServiceClient, notificationClient notification_service.NotificationServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request SendFriendRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -48,9 +49,48 @@ func HandlerSendFriendRequest(friendClient friend_service.FriendServiceClient, u
 			return
 		}
 
+		var response = &SendFriendResponse{
+			Success:   friendServiceResp.Success,
+			Error:     friendServiceResp.Error,
+			RequestID: int(friendServiceResp.RequestID),
+		}
+
+		senderID, err := strconv.ParseInt(request.FromAccountID, 10, 64)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid account ID "+request.ToAccountID, err)
+			return
+		}
+
+		receiverID, err := strconv.ParseInt(request.ToAccountID, 10, 64)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid account ID "+request.ToAccountID, err)
+			return
+		}
+
+		userData, err := userClient.GetAccountInfo(ctx, &user_service.GetAccountInfoRequest{
+			AccountID: uint32(senderID),
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Get account info error: "+err.Error(), err)
+			return
+		}
+
+		go func() {
+			_, err = notificationClient.ReceiveFriendRequestNotificationFnc(ctx, &notification_service.ReceiveFriendRequestNotification{
+				ReceiverAccountID:        receiverID,
+				SenderAccountID:          senderID,
+				SenderAccountDisplayName: userData.AccountInfo.LastName + " " + userData.AccountInfo.FirstName,
+			})
+
+			if err != nil {
+				return
+			}
+		}()
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		if err = json.NewEncoder(w).Encode(friendServiceResp); err != nil {
+		if err = json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, "Send friend response error: "+friendServiceResp.Error, http.StatusInternalServerError)
 			return
 		}
@@ -96,9 +136,14 @@ func HandlerRecallRequest(friendClient friend_service.FriendServiceClient, userC
 			return
 		}
 
+		var response = &RecallResponse{
+			Success: recallResp.Success,
+			Error:   recallResp.Error,
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		if err = json.NewEncoder(w).Encode(recallResp); err != nil {
+		if err = json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, "Recall friend response error: "+recallResp.Error, http.StatusInternalServerError)
 		}
 
@@ -162,7 +207,7 @@ func HandlerUnfriend(friendClient friend_service.FriendServiceClient, userClient
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request UnfriendRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			respondWithError(w, http.StatusBadRequest, "Invalid request payload", nil)
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -172,7 +217,7 @@ func HandlerUnfriend(friendClient friend_service.FriendServiceClient, userClient
 			UserId: request.FromAccountID,
 		})
 		if err != nil || !checkFromAccountID.IsValid {
-			http.Error(w, "Invalid account ID "+request.FromAccountID, http.StatusUnauthorized)
+			respondWithError(w, http.StatusUnauthorized, "Invalid account ID "+request.FromAccountID, nil)
 			return
 		}
 
@@ -180,7 +225,7 @@ func HandlerUnfriend(friendClient friend_service.FriendServiceClient, userClient
 			UserId: request.ToAccountID,
 		})
 		if err != nil || !checkToAccountID.IsValid {
-			http.Error(w, "Invalid account ID "+request.ToAccountID, http.StatusUnauthorized)
+			respondWithError(w, http.StatusUnauthorized, "Invalid account ID "+request.ToAccountID, nil)
 			return
 		}
 
@@ -190,7 +235,7 @@ func HandlerUnfriend(friendClient friend_service.FriendServiceClient, userClient
 		})
 
 		if err != nil {
-			http.Error(w, "Unfriend request error: "+err.Error(), http.StatusUnauthorized)
+			respondWithError(w, http.StatusInternalServerError, "Unfriend friend request error: "+err.Error(), nil)
 			return
 		}
 
@@ -203,7 +248,7 @@ func HandlerUnfriend(friendClient friend_service.FriendServiceClient, userClient
 	}
 }
 
-func HandlerResolveFollow(friendClient friend_service.FriendServiceClient, userClient user_service.UserServiceClient) http.HandlerFunc {
+func HandlerResolveFollow(friendClient friend_service.FriendServiceClient, userClient user_service.UserServiceClient, notificationClient notification_service.NotificationServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request FollowRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -240,6 +285,28 @@ func HandlerResolveFollow(friendClient friend_service.FriendServiceClient, userC
 			http.Error(w, "Resolve friend request error: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
+
+		fromAccountID, err := strconv.ParseInt(request.FromAccountID, 10, 64)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid account ID "+request.FromAccountID, err)
+			return
+		}
+
+		toAccountID, err := strconv.ParseInt(request.ToAccountID, 10, 64)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid account ID "+request.ToAccountID, err)
+			return
+		}
+
+		userData, err := userClient.GetAccountInfo(ctx, &user_service.GetAccountInfoRequest{
+			AccountID: uint32(fromAccountID),
+		})
+
+		_, err = notificationClient.FollowNotification(ctx, &notification_service.FollowNotificationRequest{
+			SenderAccountDisplayName: userData.AccountInfo.FirstName + " " + userData.AccountInfo.LastName,
+			SenderAccountID:          fromAccountID,
+			ReceiverAccountID:        toAccountID,
+		})
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -491,6 +558,72 @@ func HandlerCheckExistingFriendRequest(friendClient friend_service.FriendService
 		w.WriteHeader(http.StatusOK)
 		if err = json.NewEncoder(w).Encode(response); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Check existing friend response error", err)
+		}
+	}
+}
+
+func HandlerCheckIsFollow(friendClient friend_service.FriendServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var in CheckIsFollowRequest
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		checkResp, err := friendClient.CheckIsFollow(ctx, &friend_service.CheckIsFollowRequest{
+			FromAccountID: uint32(in.FromAccountID),
+			ToAccountID:   uint32(in.ToAccountID),
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Check follow request error", nil)
+			return
+		}
+
+		response := CheckIsFollowResponse{
+			IsFollowed: checkResp.IsFollow,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err = json.NewEncoder(w).Encode(response); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Check follow response error", err)
+		}
+	}
+}
+
+func HandlerCheckIsBlock(friendClient friend_service.FriendServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var in CheckIsBlockedRequest
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		checkResp, err := friendClient.CheckIsBlock(ctx, &friend_service.CheckIsBlockedRequest{
+			FirstAccountID:  in.FromAccountID,
+			SecondAccountID: in.ToAccountID,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Check block request error", nil)
+			return
+		}
+
+		response := CheckIsBlockedResponse{
+			IsBlocked: checkResp.IsBlocked,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err = json.NewEncoder(w).Encode(response); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Check block response error", err)
 		}
 	}
 }

@@ -27,7 +27,7 @@ func (svc *FriendService) SendFriend(ctx context.Context, in *friend_service.Sen
 
 	var existingFriend models.FriendList
 	if err := tx.Where(
-		"(first_account_id = ? AND second_account_id = ?) OR (first_account_id = ? AND second_account_id = ?)",
+		"((first_account_id = ? AND second_account_id = ?  AND is_valid = true) OR (first_account_id = ? AND second_account_id = ?  AND is_valid = true))",
 		in.FromAccountID, in.ToAccountID, in.ToAccountID, in.FromAccountID,
 	).First(&existingFriend).Error; err == nil {
 		tx.Rollback()
@@ -38,7 +38,7 @@ func (svc *FriendService) SendFriend(ctx context.Context, in *friend_service.Sen
 
 	var blockedFriend models.FriendBlock
 	if err := tx.Where(
-		"(first_account_id = ? AND second_account_id = ?) OR (first_account_id = ? AND second_account_id = ?)",
+		"(first_account_id = ? AND second_account_id = ?  AND is_blocked = true) OR (first_account_id = ? AND second_account_id = ?  AND is_blocked = true)",
 		in.FromAccountID, in.ToAccountID, in.ToAccountID, in.FromAccountID,
 	).First(&blockedFriend).Error; err == nil {
 		tx.Rollback()
@@ -49,7 +49,7 @@ func (svc *FriendService) SendFriend(ctx context.Context, in *friend_service.Sen
 
 	var existingRequest models.FriendListRequest
 	if err := tx.Where(
-		"((sender_account_id = ? AND receiver_account_id = ?) OR (sender_account_id = ? AND receiver_account_id = ?)) AND request_status = 'pending' AND is_recalled = false",
+		"((sender_account_id = ? AND receiver_account_id = ? AND request_status = 'pending' AND is_recalled = false) OR (sender_account_id = ? AND receiver_account_id = ? AND request_status = 'pending' AND is_recalled = false))",
 		in.FromAccountID, in.ToAccountID, in.ToAccountID, in.FromAccountID,
 	).First(&existingRequest).Error; err == nil {
 		tx.Rollback()
@@ -350,7 +350,7 @@ func (svc *FriendService) Unfriend(ctx context.Context, in *friend_service.Unfri
 
 	relation := &models.FriendList{}
 	if err := tx.Where(""+
-		"((first_account_id = ? AND second_account_id = ?) OR (first_account_id = ? AND second_account_id = ?)) AND is_valid = true",
+		"((first_account_id = ? AND second_account_id = ?  AND is_valid = true) OR (first_account_id = ? AND second_account_id = ?  AND is_valid = true))",
 		fromAccountID, toAccountID, toAccountID, fromAccountID,
 	).First(&relation).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -392,7 +392,7 @@ func (svc *FriendService) Unfriend(ctx context.Context, in *friend_service.Unfri
 
 	if err := tx.Model(&models.FriendFollow{}).
 		Where("first_account_id = ? AND second_account_id = ?", toAccountID, fromAccountID).
-		Delete(&models.FriendFollow{}).
+		Update("is_followed", false).
 		Error; err != nil {
 		tx.Rollback()
 		return &friend_service.UnfriendResponse{
@@ -554,9 +554,9 @@ func (svc *FriendService) ResolveFriendBlock(ctx context.Context, in *friend_ser
 			}, nil
 		}
 
-		var friend models.FriendBlock
+		var friend models.FriendList
 		if err := tx.Model(&friend).Where("(first_account_id = ? AND second_account_id = ?) OR (first_account_id = ? AND second_account_id = ?)",
-			fromAccountID, toAccountID, fromAccountID, toAccountID).First(&friend).Error; err != nil {
+			fromAccountID, toAccountID, toAccountID, fromAccountID).First(&friend).Error; err != nil {
 		} else {
 			if err := tx.Model(&friend).Delete(&friend).Error; err != nil {
 				tx.Rollback()
@@ -789,10 +789,11 @@ func (svc *FriendService) CheckIsBlock(ctx context.Context, in *friend_service.C
 			Error: "Invalid account IDs",
 		}, errors.New("invalid account IDs")
 	}
+	fmt.Printf("FA: %v, SA: %v", in.FirstAccountID, in.SecondAccountID)
 
 	var friendBlock models.FriendBlock
-	if err := svc.DB.Where("first_account_id = ? AND second_account_id = ? AND is_blocked = ?", in.FirstAccountID, in.SecondAccountID, true).
-		Or("first_account_id = ? AND second_account_id = ? AND is_blocked = ?", in.SecondAccountID, in.FirstAccountID, true).
+	if err := svc.DB.Model(models.FriendBlock{}).Where("(first_account_id = ? AND second_account_id = ? AND is_blocked = ?) OR (first_account_id = ? AND second_account_id = ? AND is_blocked = ?)",
+		in.FirstAccountID, in.SecondAccountID, true, in.SecondAccountID, in.FirstAccountID, true).
 		First(&friendBlock).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &friend_service.CheckIsBlockedResponse{

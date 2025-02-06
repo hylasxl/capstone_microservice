@@ -34,12 +34,8 @@ func (s *PostService) CreateNewPost(ctx context.Context, in *ps.CreatePostReques
 	tx := s.DB.Begin()
 
 	if in.IsPublishedLater {
-		log.Printf("Timestamp, %v", in.PublishedLateTimestamp)
 		exeTime := time.Unix(in.PublishedLateTimestamp, 0)
 		duration := time.Until(exeTime)
-		log.Printf("Now: %v0", time.Now())
-		log.Printf("Exe: %v", exeTime)
-		log.Printf("Duration: %v", duration)
 		if duration < 0 {
 			tx.Rollback()
 			errMsg := fmt.Sprintf("Cannot schedule task: time %v has already passed", exeTime)
@@ -119,8 +115,6 @@ func (s *PostService) CreateNewPost(ctx context.Context, in *ps.CreatePostReques
 }
 func (s *PostService) schedulePost(postID uint, timestamp int64) error {
 	exeTime := time.Unix(timestamp, 0)
-	log.Printf("Now: %v0", time.Now())
-	log.Printf("Is after: %v", exeTime)
 	if time.Now().After(exeTime) {
 		errMsg := fmt.Sprintf("Cannot schedule post: time %v has already passed", exeTime)
 		log.Println(errMsg)
@@ -282,6 +276,22 @@ func (s *PostService) CommentPost(ctx context.Context, in *ps.CommentPostRequest
 	}
 
 	tx := s.DB.Begin()
+
+	var existingPost *models.Post
+
+	if err := tx.Model(models.Post{}).Where("id = ? AND is_self_deleted = false AND is_deleted_by_admin = false", uint(in.PostID)).First(&existingPost).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			errMsg := fmt.Sprintf("Failed to find post with ID %d: %v", in.PostID, err)
+			log.Println(errMsg)
+			return &ps.CommentPostResponse{Error: errMsg}, err
+		} else {
+			tx.Rollback()
+			errMsg := fmt.Sprintf("Failed to find post with ID %d: %v", in.PostID, err)
+			log.Println(errMsg)
+		}
+	}
+
 	commentData := &models.PostComment{
 		PostID:    uint(in.PostID),
 		Content:   strings.TrimSpace(in.Content),
@@ -302,7 +312,8 @@ func (s *PostService) CommentPost(ctx context.Context, in *ps.CommentPostRequest
 	}
 
 	return &ps.CommentPostResponse{
-		CommentID: int64(commentData.ID),
+		CommentID:     int64(commentData.ID),
+		PostAccountID: uint64(existingPost.AccountID),
 	}, nil
 }
 
@@ -368,6 +379,21 @@ func (s *PostService) ReplyComment(ctx context.Context, in *ps.ReplyCommentReque
 
 	tx := s.DB.Begin()
 
+	var existingPost *models.Post
+
+	if err := tx.Model(models.Post{}).Where("id = ? AND is_self_deleted = false AND is_deleted_by_admin = false", uint(in.PostID)).First(&existingPost).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			errMsg := fmt.Sprintf("Failed to find post with ID %d: %v", in.PostID, err)
+			log.Println(errMsg)
+			return &ps.ReplyCommentResponse{Error: errMsg}, err
+		} else {
+			tx.Rollback()
+			errMsg := fmt.Sprintf("Failed to find post with ID %d: %v", in.PostID, err)
+			log.Println(errMsg)
+		}
+	}
+
 	var originalComment models.PostComment
 	if err := tx.Model(&originalComment).Where("id = ? AND post_id = ? ", in.OriginalCommentID, in.PostID).First(&originalComment).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -409,6 +435,7 @@ func (s *PostService) ReplyComment(ctx context.Context, in *ps.ReplyCommentReque
 
 	return &ps.ReplyCommentResponse{
 		ReplyCommentID: uint64(commentData.ID),
+		PostCommentID:  uint64(existingPost.AccountID),
 	}, nil
 }
 

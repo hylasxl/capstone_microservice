@@ -6,6 +6,16 @@ package notification;
 
 service NotificationService {
   rpc RegisterDevice (RegisterDeviceRequest) returns (RegisterDeviceResponse);
+  rpc ReceiveFriendRequestNotificationFnc (ReceiveFriendRequestNotification) returns (SingleMessageSentResponse);
+  rpc CommentNotification (CommentNotificationRequest) returns (SingleMessageSentResponse);
+  rpc ReplyCommentNotification (ReplyCommentNotificationRequest) returns (SingleMessageSentResponse);
+  rpc ReactPostNotification (ReactPostNotificationRequest) returns (SingleMessageSentResponse);
+  rpc SharePostNotification (SharePostNotificationRequest) returns (SingleMessageSentResponse);
+  rpc FollowNotification (FollowNotificationRequest) returns (SingleMessageSentResponse);
+  rpc MessageNotification (MessageNotificationRequest) returns (SingleMessageSentResponse);
+  rpc GetNotification (GetNotificationRequest) returns (GetNotificationResponse);
+  rpc MarkAsReadNoti (MarkAsReadNotiRequest) returns (MarkAsReadNotiResponse);
+  rpc CountUnReadNoti (CountUnreadNotiRequest) returns (CountUnreadNotiResponse);
 }
 
 message RegisterDeviceRequest {
@@ -15,4 +25,91 @@ message RegisterDeviceRequest {
 
 message RegisterDeviceResponse {
   bool Success = 1;
+}
+
+message ReceiveFriendRequestNotification {
+  int64 ReceiverAccountID = 1;
+  int64 SenderAccountID = 2;
+  string SenderAccountDisplayName = 3;
+}
+
+message SingleMessageSentResponse {
+  bool Success = 1;
+}
+
+message MultiMessageSentResponse {
+  repeated SingleMessageSentResponse Status = 1;
+}
+
+message CommentNotificationRequest {
+  int64 ReceiverAccountID = 1;
+  int64 SenderAccountID = 2;
+  string SenderAccountDisplayName = 3;
+}
+
+message ReplyCommentNotificationRequest {
+  int64 ReceiverAccountID = 1;
+  int64 SenderAccountID = 2;
+  string SenderAccountDisplayName = 3;
+}
+
+message ReactPostNotificationRequest {
+  int64 ReceiverAccountID = 1;
+  int64 SenderAccountID = 2;
+  string SenderAccountDisplayName = 3;
+}
+
+message SharePostNotificationRequest {
+  int64 ReceiverAccountID = 1;
+  int64 SenderAccountID = 2;
+  string SenderAccountDisplayName = 3;
+}
+
+message FollowNotificationRequest {
+  int64 ReceiverAccountID = 1;
+  int64 SenderAccountID = 2;
+  string SenderAccountDisplayName = 3;
+}
+
+message MessageNotificationRequest {
+  int64 ReceiverAccountID = 1;
+  int64 SenderAccountID = 2;
+  string SenderAccountDisplayName = 3;
+}
+
+message GetNotificationRequest {
+  uint64 AccountID = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+}
+
+message GetNotificationResponse {
+  uint64 Account = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+  repeated NotificationContent Notifications = 4;
+}
+
+message NotificationContent {
+  uint64 ID = 1;
+  string Content = 2;
+  int64 DateTime = 3;
+  bool IsRead = 4;
+}
+
+message MarkAsReadNotiRequest {
+  uint32 AccountID = 1;
+}
+
+message MarkAsReadNotiResponse {
+  bool Success = 1;
+  uint32 Quantity = 2;
+}
+
+message CountUnreadNotiRequest{
+  uint32 AccountID = 1;
+}
+
+message CountUnreadNotiResponse {
+  uint32 Quantity = 1;
 }

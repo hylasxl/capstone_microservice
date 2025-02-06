@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"gateway/proto/auth_service"
 	"gateway/proto/friend_service"
 	"gateway/proto/privacy_service"
 	"gateway/proto/user_service"
@@ -223,9 +224,6 @@ func HandlerGetProfileInfo(userClient user_service.UserServiceClient, friendClie
 			return
 		}
 
-		if isSelf {
-			blockResponse.IsBlocked = false
-		}
 		if blockResponse.IsBlocked && !isSelf {
 			respondWithError(w, http.StatusForbidden, "User Blocked", nil)
 			return
@@ -400,6 +398,133 @@ func HandlerChangeAvatar(userClient user_service.UserServiceClient) http.Handler
 		response := &SingleSuccessResponse{
 			Success: true,
 		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func HandlerLoginWithGoogle(userClient user_service.UserServiceClient, authClient auth_service.AuthServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request LoginWithGoogleRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		loginResp, err := userClient.LoginWithGoogle(ctx, &user_service.LoginWithGoogleRequest{
+			Email:       request.Email,
+			PhotoURL:    request.PhotoURL,
+			AuthCode:    request.AuthCode,
+			DisplayName: request.DisplayName,
+		})
+
+		if err != nil || loginResp == nil {
+			respondWithError(w, http.StatusInternalServerError, "LoginWithGoogle failed", nil)
+			return
+		}
+
+		permissionResp, err := authClient.GetPermissions(ctx, &auth_service.GetPermissionsRequest{
+			RoleId: "1",
+		})
+
+		var claims = &auth_service.JWTClaims{
+			AccountId:   strconv.FormatUint(loginResp.AccountID, 10),
+			Permissions: permissionResp.Url,
+			RoleId:      "1",
+			Issuer:      "SyncIO",
+			Subject:     "Authentication",
+			Audience:    "Client SyncIO",
+		}
+
+		tokenRes, err := authClient.GenerateTokens(ctx, &auth_service.GenerateTokensRequest{
+			Claims: claims,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var response = &LoginWithGoogleResponse{
+			AccessToken:  tokenRes.AccessToken,
+			RefreshToken: tokenRes.RefreshToken,
+			UserID:       strconv.FormatUint(loginResp.AccountID, 10),
+			JWTClaims:    claims,
+			Success:      true,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func HandlerVerifyUsernameAndEmail(userClient user_service.UserServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request VerifyUsernameAndEmailRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		verifyResp, err := userClient.VerifyUsernameAndEmail(ctx, &user_service.VerifyUsernameAndEmailRequest{
+			Username: request.Username,
+			Email:    request.Email,
+		})
+		if err != nil || verifyResp == nil {
+			respondWithError(w, http.StatusInternalServerError, "VerifyUsernameAndEmail failed", nil)
+			return
+		}
+
+		var response = &VerifyUsernameAndEmailResponse{
+			Success: verifyResp.Success,
+			UserID:  uint64(verifyResp.UserID),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func HandlerChangePassword(userClient user_service.UserServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request ChangePasswordRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := userClient.ChangePassword(ctx, &user_service.ChangePasswordRequest{
+			AccountID:   request.AccountID,
+			NewPassword: request.NewPassword,
+		})
+
+		if err != nil || resp == nil {
+			respondWithError(w, http.StatusInternalServerError, "ChangePassword failed", nil)
+			return
+		}
+
+		var response = &ChangePasswordResponse{
+			Success: resp.Success,
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(response); err != nil {

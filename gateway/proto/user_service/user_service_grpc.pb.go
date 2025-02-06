@@ -30,6 +30,9 @@ const (
 	UserService_GetProfileInfo_FullMethodName            = "/user.UserService/GetProfileInfo"
 	UserService_ChangeAccountInfo_FullMethodName         = "/user.UserService/ChangeAccountInfo"
 	UserService_ChangeAvatar_FullMethodName              = "/user.UserService/ChangeAvatar"
+	UserService_LoginWithGoogle_FullMethodName           = "/user.UserService/LoginWithGoogle"
+	UserService_VerifyUsernameAndEmail_FullMethodName    = "/user.UserService/VerifyUsernameAndEmail"
+	UserService_ChangePassword_FullMethodName            = "/user.UserService/ChangePassword"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -47,6 +50,9 @@ type UserServiceClient interface {
 	GetProfileInfo(ctx context.Context, in *GetProfileInfoRequest, opts ...grpc.CallOption) (*GetProfileInfoResponse, error)
 	ChangeAccountInfo(ctx context.Context, in *ChangeAccountDataRequest, opts ...grpc.CallOption) (*ChangeAccountDataResponse, error)
 	ChangeAvatar(ctx context.Context, in *ChangeAvatarRequest, opts ...grpc.CallOption) (*ChangeAvatarResponse, error)
+	LoginWithGoogle(ctx context.Context, in *LoginWithGoogleRequest, opts ...grpc.CallOption) (*LoginWithGoogleResponse, error)
+	VerifyUsernameAndEmail(ctx context.Context, in *VerifyUsernameAndEmailRequest, opts ...grpc.CallOption) (*VerifyUsernameAndEmailResponse, error)
+	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
 }
 
 type userServiceClient struct {
@@ -167,6 +173,36 @@ func (c *userServiceClient) ChangeAvatar(ctx context.Context, in *ChangeAvatarRe
 	return out, nil
 }
 
+func (c *userServiceClient) LoginWithGoogle(ctx context.Context, in *LoginWithGoogleRequest, opts ...grpc.CallOption) (*LoginWithGoogleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LoginWithGoogleResponse)
+	err := c.cc.Invoke(ctx, UserService_LoginWithGoogle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) VerifyUsernameAndEmail(ctx context.Context, in *VerifyUsernameAndEmailRequest, opts ...grpc.CallOption) (*VerifyUsernameAndEmailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VerifyUsernameAndEmailResponse)
+	err := c.cc.Invoke(ctx, UserService_VerifyUsernameAndEmail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangePasswordResponse)
+	err := c.cc.Invoke(ctx, UserService_ChangePassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -182,6 +218,9 @@ type UserServiceServer interface {
 	GetProfileInfo(context.Context, *GetProfileInfoRequest) (*GetProfileInfoResponse, error)
 	ChangeAccountInfo(context.Context, *ChangeAccountDataRequest) (*ChangeAccountDataResponse, error)
 	ChangeAvatar(context.Context, *ChangeAvatarRequest) (*ChangeAvatarResponse, error)
+	LoginWithGoogle(context.Context, *LoginWithGoogleRequest) (*LoginWithGoogleResponse, error)
+	VerifyUsernameAndEmail(context.Context, *VerifyUsernameAndEmailRequest) (*VerifyUsernameAndEmailResponse, error)
+	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -224,6 +263,15 @@ func (UnimplementedUserServiceServer) ChangeAccountInfo(context.Context, *Change
 }
 func (UnimplementedUserServiceServer) ChangeAvatar(context.Context, *ChangeAvatarRequest) (*ChangeAvatarResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeAvatar not implemented")
+}
+func (UnimplementedUserServiceServer) LoginWithGoogle(context.Context, *LoginWithGoogleRequest) (*LoginWithGoogleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LoginWithGoogle not implemented")
+}
+func (UnimplementedUserServiceServer) VerifyUsernameAndEmail(context.Context, *VerifyUsernameAndEmailRequest) (*VerifyUsernameAndEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyUsernameAndEmail not implemented")
+}
+func (UnimplementedUserServiceServer) ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangePassword not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -444,6 +492,60 @@ func _UserService_ChangeAvatar_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_LoginWithGoogle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginWithGoogleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).LoginWithGoogle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_LoginWithGoogle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).LoginWithGoogle(ctx, req.(*LoginWithGoogleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_VerifyUsernameAndEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyUsernameAndEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).VerifyUsernameAndEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_VerifyUsernameAndEmail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).VerifyUsernameAndEmail(ctx, req.(*VerifyUsernameAndEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangePasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ChangePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ChangePassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ChangePassword(ctx, req.(*ChangePasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -494,6 +596,18 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ChangeAvatar",
 			Handler:    _UserService_ChangeAvatar_Handler,
+		},
+		{
+			MethodName: "LoginWithGoogle",
+			Handler:    _UserService_LoginWithGoogle_Handler,
+		},
+		{
+			MethodName: "VerifyUsernameAndEmail",
+			Handler:    _UserService_VerifyUsernameAndEmail_Handler,
+		},
+		{
+			MethodName: "ChangePassword",
+			Handler:    _UserService_ChangePassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

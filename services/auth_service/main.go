@@ -8,9 +8,16 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"os"
+	"time"
 )
 
 func main() {
+	err := os.Setenv("TZ", "Asia/Bangkok")
+	if err != nil {
+		return
+	}
+	time.Local = time.FixedZone("UTC+7", 7*3600)
 	listener, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("Failed to listen on port 50051: %v", err)

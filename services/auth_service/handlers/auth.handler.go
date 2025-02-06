@@ -31,51 +31,96 @@ func NewAuthService(db *gorm.DB) *AuthService {
 		DB: db,
 	}
 }
-
-func (s *AuthService) ValidateToken(context context.Context, req *auth_service.ValidateTokenRequest) (*auth_service.ValidateTokenResponse, error) {
+func (s *AuthService) ValidateToken(ctx context.Context, req *auth_service.ValidateTokenRequest) (*auth_service.ValidateTokenResponse, error) {
 	tokenStr := req.Token
 
+	// Parse the token
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			println("unexpected signing method")
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(JwtSecretKey), nil
 	})
 
-	if err != nil || !token.Valid {
+	// Handle token parsing errors
+	if err != nil {
+		println("Invalid token format or signing method")
 		return &auth_service.ValidateTokenResponse{
 			Valid:        false,
-			ErrorMessage: "Invalid or expired token",
+			ErrorMessage: "Invalid token format or signing method",
 		}, nil
 	}
 
+	if !token.Valid {
+		println("Invalid token")
+		return &auth_service.ValidateTokenResponse{
+			Valid:        false,
+			ErrorMessage: "Invalid token",
+		}, nil
+	}
+
+	// Extract claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
+		println("Invalid token claims")
 		return &auth_service.ValidateTokenResponse{
 			Valid:        false,
 			ErrorMessage: "Invalid token claims",
 		}, nil
 	}
 
-	roleID := claims["role_id"].(string)
-	if roleID == "" {
+	if exp, ok := claims["exp"].(float64); ok {
+		expirationTime := time.Unix(int64(exp), 0)
+		if time.Now().After(expirationTime) {
+			println("Token expired")
+			return &auth_service.ValidateTokenResponse{
+				Valid:        false,
+				ErrorMessage: "Token has expired",
+			}, nil
+		}
+	} else {
+		println("Missing or invalid expiration claim")
 		return &auth_service.ValidateTokenResponse{
 			Valid:        false,
-			ErrorMessage: "Missing role ID in token claims",
+			ErrorMessage: "Missing or invalid expiration claim",
 		}, nil
 	}
 
-	permissions, err := s.getUserPermissions(roleID)
-	if err != nil {
+	// Validate and extract role_id
+	roleID, ok := claims["role_id"].(string)
+	if !ok || roleID == "" {
+		println("Missing or invalid role claim")
 		return &auth_service.ValidateTokenResponse{
 			Valid:        false,
-			ErrorMessage: "Failed to fetch permissions: ",
+			ErrorMessage: "Missing or invalid role ID in token claims",
+		}, nil
+	}
+
+	// Validate and extract user_id
+	userID, ok := claims["account_id"].(string)
+	if !ok || userID == "" {
+		println("Missing or invalid account ID claim")
+		return &auth_service.ValidateTokenResponse{
+			Valid:        false,
+			ErrorMessage: "Missing or invalid user ID in token claims",
+		}, nil
+	}
+
+	// Fetch permissions for the role
+	permissions, err := s.getUserPermissions(roleID)
+	fmt.Printf("%v", permissions)
+	if err != nil {
+		println("Error getting permissions")
+		return &auth_service.ValidateTokenResponse{
+			Valid:        false,
+			ErrorMessage: fmt.Sprintf("Failed to fetch permissions: %v", err),
 		}, nil
 	}
 
 	return &auth_service.ValidateTokenResponse{
 		Valid:       true,
-		UserId:      claims["user_id"].(string),
+		UserId:      userID,
 		RoleId:      roleID,
 		Permissions: permissions,
 	}, nil

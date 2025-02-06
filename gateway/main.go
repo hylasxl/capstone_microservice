@@ -2,12 +2,11 @@ package main
 
 import (
 	"gateway/routes"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -20,7 +19,6 @@ func main() {
 	}
 	time.Local = time.FixedZone("UTC+7", 7*3600)
 
-	// Initialize gRPC service clients
 	clients, err := routes.InitializeServiceClients()
 	if err != nil {
 		log.Fatalf("Failed to initialize service clients: %v", err)
