@@ -19,6 +19,14 @@ service UserService {
   rpc LoginWithGoogle (LoginWithGoogleRequest) returns (LoginWithGoogleResponse);
   rpc VerifyUsernameAndEmail (VerifyUsernameAndEmailRequest) returns (VerifyUsernameAndEmailResponse);
   rpc ChangePassword (ChangePasswordRequest) returns (ChangePasswordResponse);
+  rpc CustomDeleteAccount (CustomDeleteAccountRequest) returns (CustomDeleteAccountResponse);
+  rpc SearchAccount (SearchAccountRequest) returns (SearchAccountResponse);
+  rpc GetNewRegisterationData (GetNewRegisterationDataRequest) returns (GetNewRegisterationDataResponse);
+  rpc CountUserType (CountTypeUserRequest) returns (CountTypeUserResponse);
+  rpc GetAccountList (GetAccountListRequest) returns (GetAccountListResponse);
+  rpc SearchAccountList (SearchAccountListRequest) returns (SearchAccountListResponse);
+  rpc ResolveBan (ResolveBanRequest) returns (ResolveBanResponse);
+  rpc GetUsername (GetUsernameRequest) returns (GetUsernameResponse);
 }
 
 message LoginRequest {
@@ -216,4 +224,107 @@ message ChangePasswordRequest {
 
 message ChangePasswordResponse {
   bool Success = 1;
+}
+
+message CustomDeleteAccountRequest {
+  uint32 AccountID = 1;
+  string Method = 2;
+}
+
+message CustomDeleteAccountResponse {
+  bool Success = 1;
+}
+
+message SearchAccountRequest {
+  uint32 RequestAccountID = 1;
+  repeated uint32 BlockList = 2;
+  repeated uint32 BlockedList = 3;
+  string QueryString = 4;
+  uint32 Page = 5;
+  uint32 PageSize = 6;
+}
+
+message SearchAccountResponse {
+  repeated SingleDisplayInfo Account = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+}
+
+message GetNewRegisterationDataRequest {
+  uint32 RequestAccountID = 1;
+  string PeriodLabel = 2;
+  uint32 PeriodData = 3;
+}
+
+message GetNewRegisterationDataResponse {
+  uint32 RequestAccountID = 1;
+  string PeriodLabel = 2;
+  uint64 TotalUsers = 3;
+  repeated DataTerms Data = 4;
+}
+
+message DataTerms {
+  string Label = 1;
+  uint64 Count = 2;
+}
+
+message CountTypeUserRequest {
+  uint32 RequestAccountID = 1;
+}
+
+message CountTypeUserResponse {
+  uint32 RequestAccountID = 1;
+  uint64 TotalUsers = 2;
+  uint64 BannedUsers = 3;
+  uint64 DeletedUsers = 4;
+}
+
+message GetAccountListRequest {
+  uint32 RequestID = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+}
+
+message AccountRawInfo {
+  uint32 AccountID = 1;
+  string Username = 2;
+  bool IsBanned = 3;
+  string Method = 4;
+  bool IsSelfDeleted = 5;
+}
+
+message GetAccountListResponse {
+  repeated AccountRawInfo Accounts = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+}
+
+message SearchAccountListRequest {
+  uint32 RequestID = 1;
+  string QueryString = 2;
+  uint32 Page = 3;
+  uint32 PageSize = 4;
+}
+
+message SearchAccountListResponse {
+  repeated AccountRawInfo Accounts = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+}
+
+message ResolveBanRequest {
+  uint32 AccountID = 1;
+  string Action = 2;
+}
+
+message ResolveBanResponse {
+  bool Success = 1;
+}
+
+message GetUsernameRequest {
+  uint32 AccountID = 1;
+}
+
+message GetUsernameResponse {
+  string Username = 1;
 }

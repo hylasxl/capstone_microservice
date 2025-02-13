@@ -7,7 +7,6 @@ import (
 	"os"
 	"otp_service/configs"
 	"otp_service/handlers"
-	"otp_service/models"
 	"otp_service/proto/otp_service"
 	"time"
 )
@@ -28,13 +27,6 @@ func main() {
 	otp_service.RegisterOTPServiceServer(grpcServer, &handlers.OTPService{
 		DB: db,
 	})
-
-	err = db.AutoMigrate(
-		&models.OTPInputs{},
-		models.OTPRetakePassword{})
-	if err != nil {
-		log.Fatalf("failed to auto migrate: %v", err)
-	}
 
 	log.Println("OTP service started on port 50059")
 	if err := grpcServer.Serve(lis); err != nil {

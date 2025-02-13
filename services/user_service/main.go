@@ -10,7 +10,6 @@ import (
 	"time"
 	"user_service/configs"
 	"user_service/handlers"
-	"user_service/models"
 	"user_service/proto/user_service"
 )
 
@@ -45,20 +44,6 @@ func main() {
 		CloudinaryClient: (*handlers.CloudinaryService)(Cld),
 		DB:               DB,
 	})
-
-	err = DB.AutoMigrate(
-		&models.Account{},
-		&models.AccountAvatar{},
-		&models.AccountChangeNameHistory{},
-		&models.AccountInfo{},
-		&models.AccountRole{},
-		&models.AccountAvatarHistory{},
-	)
-	if err != nil {
-		return
-	} else {
-		log.Println("User database migrate successfully")
-	}
 
 	log.Println("User service started on port 50052")
 	if err := grpcServer.Serve(lis); err != nil {

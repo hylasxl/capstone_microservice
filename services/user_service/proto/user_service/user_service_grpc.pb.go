@@ -33,6 +33,14 @@ const (
 	UserService_LoginWithGoogle_FullMethodName           = "/user.UserService/LoginWithGoogle"
 	UserService_VerifyUsernameAndEmail_FullMethodName    = "/user.UserService/VerifyUsernameAndEmail"
 	UserService_ChangePassword_FullMethodName            = "/user.UserService/ChangePassword"
+	UserService_CustomDeleteAccount_FullMethodName       = "/user.UserService/CustomDeleteAccount"
+	UserService_SearchAccount_FullMethodName             = "/user.UserService/SearchAccount"
+	UserService_GetNewRegisterationData_FullMethodName   = "/user.UserService/GetNewRegisterationData"
+	UserService_CountUserType_FullMethodName             = "/user.UserService/CountUserType"
+	UserService_GetAccountList_FullMethodName            = "/user.UserService/GetAccountList"
+	UserService_SearchAccountList_FullMethodName         = "/user.UserService/SearchAccountList"
+	UserService_ResolveBan_FullMethodName                = "/user.UserService/ResolveBan"
+	UserService_GetUsername_FullMethodName               = "/user.UserService/GetUsername"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -53,6 +61,14 @@ type UserServiceClient interface {
 	LoginWithGoogle(ctx context.Context, in *LoginWithGoogleRequest, opts ...grpc.CallOption) (*LoginWithGoogleResponse, error)
 	VerifyUsernameAndEmail(ctx context.Context, in *VerifyUsernameAndEmailRequest, opts ...grpc.CallOption) (*VerifyUsernameAndEmailResponse, error)
 	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
+	CustomDeleteAccount(ctx context.Context, in *CustomDeleteAccountRequest, opts ...grpc.CallOption) (*CustomDeleteAccountResponse, error)
+	SearchAccount(ctx context.Context, in *SearchAccountRequest, opts ...grpc.CallOption) (*SearchAccountResponse, error)
+	GetNewRegisterationData(ctx context.Context, in *GetNewRegisterationDataRequest, opts ...grpc.CallOption) (*GetNewRegisterationDataResponse, error)
+	CountUserType(ctx context.Context, in *CountTypeUserRequest, opts ...grpc.CallOption) (*CountTypeUserResponse, error)
+	GetAccountList(ctx context.Context, in *GetAccountListRequest, opts ...grpc.CallOption) (*GetAccountListResponse, error)
+	SearchAccountList(ctx context.Context, in *SearchAccountListRequest, opts ...grpc.CallOption) (*SearchAccountListResponse, error)
+	ResolveBan(ctx context.Context, in *ResolveBanRequest, opts ...grpc.CallOption) (*ResolveBanResponse, error)
+	GetUsername(ctx context.Context, in *GetUsernameRequest, opts ...grpc.CallOption) (*GetUsernameResponse, error)
 }
 
 type userServiceClient struct {
@@ -203,6 +219,86 @@ func (c *userServiceClient) ChangePassword(ctx context.Context, in *ChangePasswo
 	return out, nil
 }
 
+func (c *userServiceClient) CustomDeleteAccount(ctx context.Context, in *CustomDeleteAccountRequest, opts ...grpc.CallOption) (*CustomDeleteAccountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CustomDeleteAccountResponse)
+	err := c.cc.Invoke(ctx, UserService_CustomDeleteAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) SearchAccount(ctx context.Context, in *SearchAccountRequest, opts ...grpc.CallOption) (*SearchAccountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchAccountResponse)
+	err := c.cc.Invoke(ctx, UserService_SearchAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetNewRegisterationData(ctx context.Context, in *GetNewRegisterationDataRequest, opts ...grpc.CallOption) (*GetNewRegisterationDataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetNewRegisterationDataResponse)
+	err := c.cc.Invoke(ctx, UserService_GetNewRegisterationData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CountUserType(ctx context.Context, in *CountTypeUserRequest, opts ...grpc.CallOption) (*CountTypeUserResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CountTypeUserResponse)
+	err := c.cc.Invoke(ctx, UserService_CountUserType_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetAccountList(ctx context.Context, in *GetAccountListRequest, opts ...grpc.CallOption) (*GetAccountListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAccountListResponse)
+	err := c.cc.Invoke(ctx, UserService_GetAccountList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) SearchAccountList(ctx context.Context, in *SearchAccountListRequest, opts ...grpc.CallOption) (*SearchAccountListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchAccountListResponse)
+	err := c.cc.Invoke(ctx, UserService_SearchAccountList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ResolveBan(ctx context.Context, in *ResolveBanRequest, opts ...grpc.CallOption) (*ResolveBanResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResolveBanResponse)
+	err := c.cc.Invoke(ctx, UserService_ResolveBan_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetUsername(ctx context.Context, in *GetUsernameRequest, opts ...grpc.CallOption) (*GetUsernameResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUsernameResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUsername_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -221,6 +317,14 @@ type UserServiceServer interface {
 	LoginWithGoogle(context.Context, *LoginWithGoogleRequest) (*LoginWithGoogleResponse, error)
 	VerifyUsernameAndEmail(context.Context, *VerifyUsernameAndEmailRequest) (*VerifyUsernameAndEmailResponse, error)
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
+	CustomDeleteAccount(context.Context, *CustomDeleteAccountRequest) (*CustomDeleteAccountResponse, error)
+	SearchAccount(context.Context, *SearchAccountRequest) (*SearchAccountResponse, error)
+	GetNewRegisterationData(context.Context, *GetNewRegisterationDataRequest) (*GetNewRegisterationDataResponse, error)
+	CountUserType(context.Context, *CountTypeUserRequest) (*CountTypeUserResponse, error)
+	GetAccountList(context.Context, *GetAccountListRequest) (*GetAccountListResponse, error)
+	SearchAccountList(context.Context, *SearchAccountListRequest) (*SearchAccountListResponse, error)
+	ResolveBan(context.Context, *ResolveBanRequest) (*ResolveBanResponse, error)
+	GetUsername(context.Context, *GetUsernameRequest) (*GetUsernameResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -272,6 +376,30 @@ func (UnimplementedUserServiceServer) VerifyUsernameAndEmail(context.Context, *V
 }
 func (UnimplementedUserServiceServer) ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangePassword not implemented")
+}
+func (UnimplementedUserServiceServer) CustomDeleteAccount(context.Context, *CustomDeleteAccountRequest) (*CustomDeleteAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CustomDeleteAccount not implemented")
+}
+func (UnimplementedUserServiceServer) SearchAccount(context.Context, *SearchAccountRequest) (*SearchAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchAccount not implemented")
+}
+func (UnimplementedUserServiceServer) GetNewRegisterationData(context.Context, *GetNewRegisterationDataRequest) (*GetNewRegisterationDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNewRegisterationData not implemented")
+}
+func (UnimplementedUserServiceServer) CountUserType(context.Context, *CountTypeUserRequest) (*CountTypeUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CountUserType not implemented")
+}
+func (UnimplementedUserServiceServer) GetAccountList(context.Context, *GetAccountListRequest) (*GetAccountListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAccountList not implemented")
+}
+func (UnimplementedUserServiceServer) SearchAccountList(context.Context, *SearchAccountListRequest) (*SearchAccountListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchAccountList not implemented")
+}
+func (UnimplementedUserServiceServer) ResolveBan(context.Context, *ResolveBanRequest) (*ResolveBanResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResolveBan not implemented")
+}
+func (UnimplementedUserServiceServer) GetUsername(context.Context, *GetUsernameRequest) (*GetUsernameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUsername not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -546,6 +674,150 @@ func _UserService_ChangePassword_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_CustomDeleteAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CustomDeleteAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CustomDeleteAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CustomDeleteAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CustomDeleteAccount(ctx, req.(*CustomDeleteAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_SearchAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).SearchAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_SearchAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).SearchAccount(ctx, req.(*SearchAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetNewRegisterationData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNewRegisterationDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetNewRegisterationData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetNewRegisterationData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetNewRegisterationData(ctx, req.(*GetNewRegisterationDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CountUserType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CountTypeUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CountUserType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CountUserType_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CountUserType(ctx, req.(*CountTypeUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetAccountList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAccountListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetAccountList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetAccountList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetAccountList(ctx, req.(*GetAccountListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_SearchAccountList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchAccountListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).SearchAccountList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_SearchAccountList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).SearchAccountList(ctx, req.(*SearchAccountListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ResolveBan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveBanRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ResolveBan(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ResolveBan_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ResolveBan(ctx, req.(*ResolveBanRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetUsername_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUsernameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUsername(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUsername_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUsername(ctx, req.(*GetUsernameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -608,6 +880,38 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ChangePassword",
 			Handler:    _UserService_ChangePassword_Handler,
+		},
+		{
+			MethodName: "CustomDeleteAccount",
+			Handler:    _UserService_CustomDeleteAccount_Handler,
+		},
+		{
+			MethodName: "SearchAccount",
+			Handler:    _UserService_SearchAccount_Handler,
+		},
+		{
+			MethodName: "GetNewRegisterationData",
+			Handler:    _UserService_GetNewRegisterationData_Handler,
+		},
+		{
+			MethodName: "CountUserType",
+			Handler:    _UserService_CountUserType_Handler,
+		},
+		{
+			MethodName: "GetAccountList",
+			Handler:    _UserService_GetAccountList_Handler,
+		},
+		{
+			MethodName: "SearchAccountList",
+			Handler:    _UserService_SearchAccountList_Handler,
+		},
+		{
+			MethodName: "ResolveBan",
+			Handler:    _UserService_ResolveBan_Handler,
+		},
+		{
+			MethodName: "GetUsername",
+			Handler:    _UserService_GetUsername_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

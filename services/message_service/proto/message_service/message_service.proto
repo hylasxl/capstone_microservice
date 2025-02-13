@@ -8,6 +8,9 @@ service MessageService {
   rpc GetChatHistory (ChatHistoryRequest) returns (ChatHistoryResponse);
   rpc ChatStream (stream ChatMessage) returns (stream ChatMessageReturn);
   rpc GetChatList (GetChatListRequest) returns (GetChatListResponse);
+  rpc GetMessages (GetMessageRequest) returns (GetMessageResponse);
+  rpc ActionMessage (ActionMessageRequest) returns (ActionMessageResponse);
+  rpc ReceiverMarkMessageAsRead (ReceiverMarkMessageAsReadRequest) returns (ReceiverMarkMessageAsReadResponse);
 }
 
 message ChatMessage {
@@ -69,6 +72,7 @@ message GetChatListResponse {
 }
 
 message ChatList {
+  string ChatID = 10;
   uint32 AccountID = 1;
   uint32 TargetAccountID = 2;
   string DisplayName = 3;
@@ -78,4 +82,50 @@ message ChatList {
   uint64 UnreadMessageQuantity = 7;
   uint32 Page = 8;
   uint32 PageSize = 9;
+}
+
+
+message GetMessageRequest {
+  string ChatID = 1;
+  uint32 Page = 2;
+  uint32 PageSize = 3;
+}
+
+message GetMessageResponse {
+  repeated MessageData Messages = 1;
+}
+
+message MessageData {
+  string ID = 1;
+  string ChatID = 2;
+  uint32 SenderID = 3;
+  uint32 ReceiverID = 4;
+  string Content = 5;
+  string Type = 6;
+  int64 Timestamp = 7;
+  int64 CreatedAt = 8;
+  int64 UpdatedAt = 9;
+  bool IsDeleted = 10;
+  bool IsRecalled = 11;
+  bool IsRead = 12;
+}
+
+message ActionMessageRequest {
+  uint32 SenderID = 1;
+  uint32 ReceiverID = 2;
+  int64 Timestamp = 3;
+  string Action = 4;
+}
+
+message ActionMessageResponse {
+  bool Success = 1;
+}
+
+message ReceiverMarkMessageAsReadRequest {
+  uint32 AccountID = 1;
+  string ChatID = 2;
+}
+
+message ReceiverMarkMessageAsReadResponse {
+  bool Success = 1;
 }

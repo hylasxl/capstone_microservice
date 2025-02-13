@@ -56,7 +56,6 @@ func InitializeServiceClients() (*ServiceClients, error) {
 			return nil, fmt.Errorf("failed to connect to %s at %s: %w", serviceName, serviceAddr, err)
 		}
 
-		log.Printf("Connected to %s at %s", serviceName, serviceAddr)
 		connections = append(connections, conn)
 
 		switch serviceName {
@@ -102,8 +101,8 @@ func getServiceAddr(serviceName string) string {
 		"notificationService":  "notification_service:50057",
 		"onlineHistoryService": "online_history_service:50058",
 		"otpService":           "otp_service:50059",
-		"postService":          "post_service:51000",
-		"privacyService":       "privacy_service:52000",
+		"postService":          "post_service:50100",
+		"privacyService":       "privacy_service:50900",
 		"userService":          "user_service:50052",
 	}
 

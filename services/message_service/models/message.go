@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -63,10 +64,6 @@ func UpdateMessage(ctx context.Context, db *mongo.Database, id primitive.ObjectI
 	return collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": update})
 }
 
-func DeleteMessage(ctx context.Context, db *mongo.Database, id primitive.ObjectID) (*mongo.UpdateResult, error) {
-	return UpdateMessage(ctx, db, id, bson.M{"is_deleted": true})
-}
-
 func MarkMessageAsRead(ctx context.Context, db *mongo.Database, id primitive.ObjectID) (*mongo.UpdateResult, error) {
 	return UpdateMessage(ctx, db, id, bson.M{"is_read": true})
 }
@@ -104,18 +101,110 @@ func FindMessagesByUserID(ctx context.Context, db *mongo.Database, userID uint, 
 	return messages, nil
 }
 
-func RecallMessage(ctx context.Context, db *mongo.Database, id primitive.ObjectID, userID uint) (*mongo.UpdateResult, error) {
-	collection := db.Collection(Message{}.CollectionName())
-	
-	filter := bson.M{"_id": id, "sender_id": userID}
+func GetMessages(ctx context.Context, db *mongo.Database, req GetMessageRequest) ([]MessageData, error) {
+	var messages []MessageData
 
-	update := bson.M{
-		"$set": bson.M{
-			"is_recalled": true,
-			"updated_at":  time.Now(),
-			"content":     "[Message Recalled]", // Optional: Replace content with placeholder
-		},
+	collection := db.Collection(Message{}.CollectionName())
+
+	chatObjectID, err := primitive.ObjectIDFromHex(req.ChatID)
+	if err != nil {
+		return nil, err
 	}
 
-	return collection.UpdateOne(ctx, filter, update)
+	filter := bson.M{
+		"chat_id": chatObjectID,
+	}
+
+	findOptions := options.Find()
+	findOptions.SetSort(bson.M{"timestamp": -1})
+	findOptions.SetSkip(int64((req.Page - 1) * req.PageSize))
+	findOptions.SetLimit(int64(req.PageSize))
+
+	cursor, err := collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			log.Println(err)
+		}
+	}(cursor, ctx)
+
+	for cursor.Next(ctx) {
+		var msg Message
+		if err := cursor.Decode(&msg); err != nil {
+			return nil, err
+		}
+
+		// Convert MongoDB object to API response format
+		messages = append(messages, MessageData{
+			ID:         msg.ID.Hex(),
+			ChatID:     msg.ChatID.Hex(),
+			SenderID:   uint32(msg.SenderID),
+			ReceiverID: uint32(msg.ReceiverID),
+			Content:    msg.Content,
+			Type:       msg.MessageType,
+			Timestamp:  msg.Timestamp,
+			CreatedAt:  int(msg.CreatedAt.Unix()),
+			UpdatedAt:  int(msg.UpdatedAt.Unix()),
+			IsDeleted:  msg.IsDeleted,
+			IsRecalled: msg.IsRecalled,
+			IsRead:     msg.IsRead,
+		})
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return messages, nil
+
+}
+
+func DeleteMessage(ctx context.Context, db *mongo.Database, req ActionMessageRequest) error {
+	collection := db.Collection(Message{}.CollectionName())
+
+	_, err := collection.UpdateOne(ctx, bson.M{
+		"sender_id":   req.SenderID,
+		"receiver_id": req.ReceiverId,
+		"timestamp":   req.Timestamp,
+	}, bson.M{"$set": bson.M{"is_deleted": true}}, options.Update().SetUpsert(true))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func RecallMessage(ctx context.Context, db *mongo.Database, req ActionMessageRequest) error {
+	collection := db.Collection(Message{}.CollectionName())
+
+	_, err := collection.UpdateOne(ctx, bson.M{
+		"sender_id":   req.SenderID,
+		"receiver_id": req.ReceiverId,
+		"timestamp":   req.Timestamp,
+	}, bson.M{"$set": bson.M{"is_recalled": true}}, options.Update().SetUpsert(true))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ReceiverMarkMessageAsRead(ctx context.Context, db *mongo.Database, req ReceiverMarkMessageAsReadRequest) error {
+	collection := db.Collection(Message{}.CollectionName())
+	chatObjectID, err := primitive.ObjectIDFromHex(req.ChatID)
+	if err != nil {
+		return err
+	}
+
+	_, err = collection.UpdateMany(ctx, bson.M{
+		"chat_id":     chatObjectID,
+		"receiver_id": req.AccountID,
+	}, bson.M{"$set": bson.M{"is_read": true}}, options.Update().SetUpsert(true))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

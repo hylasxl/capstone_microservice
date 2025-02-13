@@ -13,6 +13,10 @@ func InitializePostRoutes(router *mux.Router, clients *ServiceClients) {
 	postRoutes.HandleFunc("/get-wall-posts", handlers.HandlerGetWallPost(clients.PostService, clients.UserService, clients.FriendService)).Methods("GET")
 	postRoutes.HandleFunc("/get-new-feeds", handlers.HandlerGetNewFeeds(clients.PostService, clients.UserService, clients.FriendService)).Methods("GET")
 
+	postRoutes.HandleFunc("/get-new-post-statistic", handlers.HandlerGetNewPostStatisticData(clients.PostService)).Methods("POST")
+	postRoutes.HandleFunc("/get-media-statistic", handlers.HandlerGetMediaStatistic(clients.PostService)).Methods("POST")
+	postRoutes.HandleFunc("/get-post-w-media-statistic", handlers.HandlerGetPostWMediaStatistic(clients.PostService)).Methods("POST")
+
 	postRoutes.HandleFunc("/create-new-post", handlers.HandlerCreatePost(clients.PostService, clients.UserService, clients.ModerationService)).Methods("POST")
 	postRoutes.HandleFunc("/share-post", handlers.HandlerSharePost(clients.PostService, clients.UserService, clients.ModerationService)).Methods("POST")
 	postRoutes.HandleFunc("/comment-post", handlers.HandlerCommentPost(clients.PostService, clients.UserService, clients.ModerationService, clients.NotificationService)).Methods("POST")
@@ -26,7 +30,7 @@ func InitializePostRoutes(router *mux.Router, clients *ServiceClients) {
 	postRoutes.HandleFunc("/edit-comment-image", handlers.HandlerEditCommentImage(clients.PostService, clients.UserService, clients.ModerationService)).Methods("PUT")
 
 	postRoutes.HandleFunc("/remove-react-post", handlers.HandlerRemoveReactPost(clients.PostService, clients.UserService)).Methods("DELETE")
-	postRoutes.HandleFunc("/delete-post/{id}", handlers.HandlerDeletePost(clients.PostService)).Methods("DELETE")
+	postRoutes.HandleFunc("/delete-post", handlers.HandlerDeletePost(clients.PostService)).Methods("DELETE")
 	postRoutes.HandleFunc("/delete-post-comment", handlers.HandlerDeletePostComment(clients.PostService)).Methods("DELETE")
 	postRoutes.HandleFunc("/delete-post-image", handlers.HandlerDeletePostImage(clients.PostService)).Methods("DELETE")
 	postRoutes.HandleFunc("/remove-react-image", handlers.HandlerRemoveReactImage(clients.PostService, clients.UserService)).Methods("DELETE")

@@ -9,7 +9,6 @@ import (
 	"net"
 	"notification_service/configs"
 	"notification_service/handlers"
-	"notification_service/models"
 	"notification_service/proto/notification_service"
 	"os"
 )
@@ -21,13 +20,6 @@ func main() {
 	}
 
 	DB := configs.InitMySQL()
-	if err := DB.AutoMigrate(
-		&models.Notification{},
-		&models.NotificationType{},
-		&models.Device{},
-	); err != nil {
-		log.Fatalf("failed to auto migrate: %v", err)
-	}
 
 	firebaseApp, err := initFirebase()
 	if err != nil {

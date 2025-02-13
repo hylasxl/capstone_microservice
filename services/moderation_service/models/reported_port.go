@@ -8,5 +8,5 @@ type ReportedPort struct {
 	ReportedByAccountID uint   `gorm:"not null"`
 	Reason              string `gorm:"type:text;not null"`
 	ReportResolve       string `gorm:"type:ENUM('report_pending','report_skipped','delete_post');default:'report_pending'"`
-	ResolvedByAccountID uint   `gorm:"not null"`
+	ResolvedByAccountID uint   `gorm:"null"`
 }

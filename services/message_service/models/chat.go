@@ -171,6 +171,7 @@ func GetChatList(ctx context.Context, db *mongo.Database, req GetChatListRequest
 
 		// Construct chat list entry
 		chatLists = append(chatLists, ChatList{
+			ChatID:                chat.ID.Hex(),
 			AccountID:             req.AccountID,
 			TargetAccountID:       targetAccountID,
 			DisplayName:           "", // Fetch from user service if needed

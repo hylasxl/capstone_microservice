@@ -6,12 +6,11 @@ import (
 	"net"
 	"privacy_service/configs"
 	"privacy_service/handlers"
-	"privacy_service/models"
 	"privacy_service/proto/privacy_service"
 )
 
 func main() {
-	lis, err := net.Listen("tcp", ":52000")
+	lis, err := net.Listen("tcp", ":50900")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -24,15 +23,7 @@ func main() {
 		DB: db,
 	})
 
-	err = db.AutoMigrate(
-		&models.DataPrivacy{},
-		&models.DataPrivacyIndex{},
-	)
-	if err != nil {
-		log.Fatalf("failed to auto migrate: %v", err)
-	}
-
-	log.Println("Privacy service started on port 52000")
+	log.Println("Privacy service started on port 50900")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

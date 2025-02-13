@@ -6,6 +6,16 @@ package moderation;
 
 service ModerationService {
   rpc IdentifyAndReplaceText (IdentifyAndReplaceTextRequest) returns (IdentifyAndReplaceTextResponse);
+  rpc HandleReportPost (ReportPost) returns (SingleLineStatusResponse);
+  rpc HandleReportAccount (ReportAccount) returns (SingleLineStatusResponse);
+  rpc HandleResolveReportedPost (ResolveReportedPost) returns (SingleLineStatusResponse);
+  rpc HandleResolveReportedAccount (ResolveReportedAccount) returns (SingleLineStatusResponse);
+  rpc HandleGetReportAccountList (GetReportedAccountListRequest) returns (GetReportedAccountListResponse);
+  rpc GetReportedPosts (GetReportedPostRequest) returns (GetReportedPostResponse);
+  rpc GetListBanWords (GetListBanWordsReq) returns (GetListBanWordsRes);
+  rpc EditWord (EditWordReq) returns (EditWordRes);
+  rpc DeleteWord (DeleteWordReq) returns (DeleteWordRes);
+  rpc AddWord (AddWordReq) returns (AddWordRes);
 }
 
 message IdentifyAndReplaceTextRequest {
@@ -15,4 +25,115 @@ message IdentifyAndReplaceTextRequest {
 message IdentifyAndReplaceTextResponse {
   string ReturnedContent = 1;
   string Error = 2;
+}
+
+message ReportPost {
+  uint32 PostID = 1;
+  uint32 ReportedBy = 2;
+  string Reason = 3;
+}
+
+message ReportAccount {
+  uint32 AccountID = 1;
+  uint32 ReportedBy = 2;
+  string Reason = 3;
+}
+
+message ResolveReportedPost {
+  uint32 PostID = 1;
+  uint32 ResolvedBy = 2;
+  string Method = 3;
+}
+
+message ResolveReportedAccount {
+  uint32 AccountID  = 1;
+  uint32 ResolvedBy = 2;
+  string Method = 3;
+}
+
+message SingleLineStatusResponse {
+  bool Success = 1;
+}
+
+message GetReportedAccountListRequest {
+  uint32 Page = 1;
+  uint32 PageSize = 2;
+}
+
+
+message ReportAccountData {
+  uint32 AccountID = 1;
+  string Reasons = 2;
+  string ResolveStatus = 3;
+}
+
+message GetReportedAccountListResponse {
+  uint32 Page = 1;
+  uint32 PageSize = 2;
+  repeated ReportAccountData Data = 3;
+
+}
+
+message GetReportedPostRequest {
+  uint32 Page = 1;
+  uint32 PageSize = 2;
+}
+
+message GetReportedPostResponse{
+  uint32 Page = 1;
+  uint32 PageSize = 2;
+  repeated ReportedPostData ReportedPosts = 3;
+}
+
+message ReportedPostData {
+  uint32 ID = 1;
+  uint32 PostID = 2;
+  string Reason = 4;
+  string ResolveStatus = 3;
+}
+
+message GetListBanWordsReq {
+  uint32 RequestAccountID = 1;
+}
+
+message WordData {
+  uint32 ID = 1;
+  string Word = 2;
+}
+
+message DataSet {
+  string LanguageCode = 1;
+  repeated WordData Words = 2;
+}
+
+message GetListBanWordsRes {
+  repeated DataSet Data = 1;
+}
+
+message EditWordReq {
+  uint32 ID = 1;
+  string Content = 2;
+}
+
+message EditWordRes {
+  bool Success = 1;
+}
+
+message DeleteWordReq {
+  uint32 ID = 1;
+}
+
+message DeleteWordRes {
+  bool Success = 1;
+}
+
+message AddWordReq {
+  uint32 RequestAccountID = 1;
+  string Content = 2;
+  string LanguageCode = 3;
+}
+
+message AddWordRes {
+  bool Success = 1;
+  uint32 ID = 2;
 }

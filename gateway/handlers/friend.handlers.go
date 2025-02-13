@@ -286,27 +286,29 @@ func HandlerResolveFollow(friendClient friend_service.FriendServiceClient, userC
 			return
 		}
 
-		fromAccountID, err := strconv.ParseInt(request.FromAccountID, 10, 64)
-		if err != nil {
-			respondWithError(w, http.StatusBadRequest, "Invalid account ID "+request.FromAccountID, err)
-			return
+		if request.Action == "follow" {
+			fromAccountID, err := strconv.ParseInt(request.FromAccountID, 10, 64)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, "Invalid account ID "+request.FromAccountID, err)
+				return
+			}
+
+			toAccountID, err := strconv.ParseInt(request.ToAccountID, 10, 64)
+			if err != nil {
+				respondWithError(w, http.StatusBadRequest, "Invalid account ID "+request.ToAccountID, err)
+				return
+			}
+
+			userData, err := userClient.GetAccountInfo(ctx, &user_service.GetAccountInfoRequest{
+				AccountID: uint32(fromAccountID),
+			})
+
+			_, err = notificationClient.FollowNotification(ctx, &notification_service.FollowNotificationRequest{
+				SenderAccountDisplayName: userData.AccountInfo.FirstName + " " + userData.AccountInfo.LastName,
+				SenderAccountID:          fromAccountID,
+				ReceiverAccountID:        toAccountID,
+			})
 		}
-
-		toAccountID, err := strconv.ParseInt(request.ToAccountID, 10, 64)
-		if err != nil {
-			respondWithError(w, http.StatusBadRequest, "Invalid account ID "+request.ToAccountID, err)
-			return
-		}
-
-		userData, err := userClient.GetAccountInfo(ctx, &user_service.GetAccountInfoRequest{
-			AccountID: uint32(fromAccountID),
-		})
-
-		_, err = notificationClient.FollowNotification(ctx, &notification_service.FollowNotificationRequest{
-			SenderAccountDisplayName: userData.AccountInfo.FirstName + " " + userData.AccountInfo.LastName,
-			SenderAccountID:          fromAccountID,
-			ReceiverAccountID:        toAccountID,
-		})
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -363,7 +365,6 @@ func HandlerResolveBlock(friendClient friend_service.FriendServiceClient, userCl
 		}
 	}
 }
-
 func HandlerGetPendingList(friendClient friend_service.FriendServiceClient, userClient user_service.UserServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request GetPendingListRequest
@@ -371,9 +372,11 @@ func HandlerGetPendingList(friendClient friend_service.FriendServiceClient, user
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
 		}
+
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
+		// Check if the provided AccountID is valid
 		checkAccountID, err := userClient.CheckValidUser(ctx, &user_service.CheckValidUserRequest{
 			UserId: request.AccountID,
 		})
@@ -382,28 +385,50 @@ func HandlerGetPendingList(friendClient friend_service.FriendServiceClient, user
 			return
 		}
 
+		// Fetch pending list
 		getPendingListResp, err := friendClient.GetPendingList(ctx, &friend_service.GetPendingListRequest{
 			AccountID: request.AccountID,
 			Page:      int64(request.Page),
 		})
 		if err != nil {
-			http.Error(w, "Get pending list error: "+err.Error(), http.StatusUnauthorized)
+			http.Error(w, "Get pending list error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		var listIDs = make([]uint64, len(getPendingListResp.GetListPending()))
-		for i, listID := range getPendingListResp.ListPending {
-			listIDs[i] = listID.AccountID
+		// Filter out invalid users
+		var listIDs []uint64
+		var validPendingList []friend_service.PendingData // Store only valid items
+
+		for _, listID := range getPendingListResp.ListPending {
+			checkValidResp, _ := userClient.CheckValidUser(ctx, &user_service.CheckValidUserRequest{
+				UserId: strconv.FormatUint(listID.AccountID, 10),
+			})
+
+			if checkValidResp.IsValid {
+				listIDs = append(listIDs, listID.AccountID)
+				validPendingList = append(validPendingList, friend_service.PendingData{
+					AccountID:     listID.AccountID,
+					RequestID:     listID.RequestID,
+					CreatedAt:     listID.CreatedAt,
+					MutualFriends: listID.MutualFriends,
+				}) // Keep valid items
+			}
 		}
 
+		// Fetch account information for valid users only
 		getAccountInfosResp, err := userClient.GetListAccountDisplayInfo(ctx, &user_service.GetListAccountDisplayInfoRequest{
 			IDs: listIDs,
 		})
+		if err != nil {
+			http.Error(w, "Error fetching account info: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 
+		// Prepare the response
 		var response GetPendingListResponse
 		response.Page = int(getPendingListResp.Page)
 
-		returnedData := make([]GetPendingListReturnSingleLine, len(listIDs))
+		returnedData := make([]GetPendingListReturnSingleLine, len(validPendingList))
 		for i, data := range getAccountInfosResp.Infos {
 			var accData SingleAccountInfo
 			accData.AvatarURL = data.AvatarURL
@@ -412,14 +437,15 @@ func HandlerGetPendingList(friendClient friend_service.FriendServiceClient, user
 
 			returnedData[i] = GetPendingListReturnSingleLine{
 				AccountInfo:   accData,
-				RequestID:     strconv.FormatUint(getPendingListResp.ListPending[i].RequestID, 10),
-				CreatedAt:     getPendingListResp.ListPending[i].CreatedAt,
-				MutualFriends: getPendingListResp.ListPending[i].MutualFriends,
+				RequestID:     strconv.FormatUint(validPendingList[i].RequestID, 10), // Use validPendingList
+				CreatedAt:     validPendingList[i].CreatedAt,
+				MutualFriends: validPendingList[i].MutualFriends,
 			}
 		}
 
 		response.Data = returnedData
 
+		// Send response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if err = json.NewEncoder(w).Encode(response); err != nil {

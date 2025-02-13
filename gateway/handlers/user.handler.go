@@ -533,3 +533,281 @@ func HandlerChangePassword(userClient user_service.UserServiceClient) http.Handl
 		}
 	}
 }
+
+func HandlerSearchAccounts(userClient user_service.UserServiceClient, friendClient friend_service.FriendServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var in SearchAccountRequest
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		blockList, err := friendClient.GetBlockList(ctx, &friend_service.GetBlockListRequest{
+			AccountID: uint32(in.RequestAccountID),
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "GetBlockList failed", err)
+			return
+		}
+
+		blockedList, err := friendClient.GetBlockedList(ctx, &friend_service.GetBlockedListRequest{
+			AccountID: uint32(in.RequestAccountID),
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "GetBlockList failed", err)
+			return
+		}
+
+		resp, err := userClient.SearchAccount(ctx, &user_service.SearchAccountRequest{
+			RequestAccountID: uint32(in.RequestAccountID),
+			BlockedList:      blockedList.IDs,
+			BlockList:        blockList.IDs,
+			Page:             in.Page,
+			PageSize:         in.PageSize,
+			QueryString:      in.QueryString,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "SearchAccount failed", err)
+			return
+		}
+
+		var accounts []SingleAccountInfo
+
+		for _, account := range resp.Account {
+			accounts = append(accounts, SingleAccountInfo{
+				AccountID:   uint(account.AccountID),
+				AvatarURL:   account.AvatarURL,
+				DisplayName: account.DisplayName,
+			})
+		}
+
+		var response = &SearchAccountResponse{
+			Page:     in.Page,
+			PageSize: in.PageSize,
+			Accounts: accounts,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func HandlerGetNewRegisterationData(userClient user_service.UserServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var request GetNewRegisterationDataRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		periodData := request.PeriodYear
+
+		if request.PeriodLabel == "month" {
+			periodData = request.PeriodYear*100 + (request.PeriodMonth % 100)
+		}
+
+		data, err := userClient.GetNewRegisterationData(ctx, &user_service.GetNewRegisterationDataRequest{
+			RequestAccountID: uint32(request.RequestAccountID),
+			PeriodLabel:      request.PeriodLabel,
+			PeriodData:       periodData,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "GetNewRegisterationData failed", err)
+			return
+		}
+
+		var dataTerms []DataTerms
+
+		for _, index := range data.Data {
+			dataTerms = append(dataTerms, DataTerms{
+				Label: index.Label,
+				Count: index.Count,
+			})
+		}
+
+		var response = &GetNewRegisterationDataResponse{
+			RequestAccountID: uint64(data.RequestAccountID),
+			PeriodLabel:      data.PeriodLabel,
+			TotalUsers:       uint32(data.TotalUsers),
+			Data:             dataTerms,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func HandlerGetUserType(userClient user_service.UserServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request GetUserTypeRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := userClient.CountUserType(ctx, &user_service.CountTypeUserRequest{
+			RequestAccountID: uint32(request.RequestAccountID),
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "CountUserType failed", err)
+			return
+		}
+
+		var response = &GetUserTypeResponse{
+			RequestAccountID: uint64(request.RequestAccountID),
+			TotalUsers:       uint32(resp.TotalUsers),
+			BannedUsers:      uint32(resp.BannedUsers),
+			DeletedUsers:     uint32(resp.DeletedUsers),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func HandlerGetAccountList(userClient user_service.UserServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var in GetAccountListRequest
+
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := userClient.GetAccountList(ctx, &user_service.GetAccountListRequest{
+			RequestID: uint32(in.RequestID),
+			Page:      in.Page,
+			PageSize:  in.PageSize,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "GetAccountList failed", err)
+			return
+		}
+
+		var response = &GetAccountListResponse{
+			Page:     in.Page,
+			PageSize: in.PageSize,
+		}
+
+		for _, account := range resp.Accounts {
+			response.Accounts = append(response.Accounts, AccountRawInfo{
+				AccountID:     uint32(account.AccountID),
+				Username:      account.Username,
+				IsBanned:      account.IsBanned,
+				IsSelfDeleted: account.IsSelfDeleted,
+				Method:        account.Method,
+			})
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func HandlerSearchAccountList(userClient user_service.UserServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var in SearchAccountListRequest
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+			return
+
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := userClient.SearchAccountList(ctx, &user_service.SearchAccountListRequest{
+			RequestID:   uint32(in.RequestID),
+			Page:        in.Page,
+			PageSize:    in.PageSize,
+			QueryString: in.QueryString,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "SearchAccountList failed", err)
+			return
+		}
+
+		var response = &SearchAccountListResponse{
+			Page:     in.Page,
+			PageSize: in.PageSize,
+		}
+
+		for _, account := range resp.Accounts {
+			response.Accounts = append(response.Accounts, AccountRawInfo{
+				AccountID:     uint32(account.AccountID),
+				Username:      account.Username,
+				IsBanned:      account.IsBanned,
+				IsSelfDeleted: account.IsSelfDeleted,
+				Method:        account.Method,
+			})
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func HandlerBanUser(userClient user_service.UserServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request ResolveBanUserRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := userClient.ResolveBan(ctx, &user_service.ResolveBanRequest{
+			AccountID: uint32(request.AccountID),
+			Action:    request.Action,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "ResolveBan failed", err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
+		}
+	}
+}

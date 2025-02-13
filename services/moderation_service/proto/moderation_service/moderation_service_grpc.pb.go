@@ -19,7 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ModerationService_IdentifyAndReplaceText_FullMethodName = "/moderation.ModerationService/IdentifyAndReplaceText"
+	ModerationService_IdentifyAndReplaceText_FullMethodName       = "/moderation.ModerationService/IdentifyAndReplaceText"
+	ModerationService_HandleReportPost_FullMethodName             = "/moderation.ModerationService/HandleReportPost"
+	ModerationService_HandleReportAccount_FullMethodName          = "/moderation.ModerationService/HandleReportAccount"
+	ModerationService_HandleResolveReportedPost_FullMethodName    = "/moderation.ModerationService/HandleResolveReportedPost"
+	ModerationService_HandleResolveReportedAccount_FullMethodName = "/moderation.ModerationService/HandleResolveReportedAccount"
+	ModerationService_HandleGetReportAccountList_FullMethodName   = "/moderation.ModerationService/HandleGetReportAccountList"
+	ModerationService_GetReportedPosts_FullMethodName             = "/moderation.ModerationService/GetReportedPosts"
+	ModerationService_GetListBanWords_FullMethodName              = "/moderation.ModerationService/GetListBanWords"
+	ModerationService_EditWord_FullMethodName                     = "/moderation.ModerationService/EditWord"
+	ModerationService_DeleteWord_FullMethodName                   = "/moderation.ModerationService/DeleteWord"
+	ModerationService_AddWord_FullMethodName                      = "/moderation.ModerationService/AddWord"
 )
 
 // ModerationServiceClient is the client API for ModerationService service.
@@ -27,6 +37,16 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ModerationServiceClient interface {
 	IdentifyAndReplaceText(ctx context.Context, in *IdentifyAndReplaceTextRequest, opts ...grpc.CallOption) (*IdentifyAndReplaceTextResponse, error)
+	HandleReportPost(ctx context.Context, in *ReportPost, opts ...grpc.CallOption) (*SingleLineStatusResponse, error)
+	HandleReportAccount(ctx context.Context, in *ReportAccount, opts ...grpc.CallOption) (*SingleLineStatusResponse, error)
+	HandleResolveReportedPost(ctx context.Context, in *ResolveReportedPost, opts ...grpc.CallOption) (*SingleLineStatusResponse, error)
+	HandleResolveReportedAccount(ctx context.Context, in *ResolveReportedAccount, opts ...grpc.CallOption) (*SingleLineStatusResponse, error)
+	HandleGetReportAccountList(ctx context.Context, in *GetReportedAccountListRequest, opts ...grpc.CallOption) (*GetReportedAccountListResponse, error)
+	GetReportedPosts(ctx context.Context, in *GetReportedPostRequest, opts ...grpc.CallOption) (*GetReportedPostResponse, error)
+	GetListBanWords(ctx context.Context, in *GetListBanWordsReq, opts ...grpc.CallOption) (*GetListBanWordsRes, error)
+	EditWord(ctx context.Context, in *EditWordReq, opts ...grpc.CallOption) (*EditWordRes, error)
+	DeleteWord(ctx context.Context, in *DeleteWordReq, opts ...grpc.CallOption) (*DeleteWordRes, error)
+	AddWord(ctx context.Context, in *AddWordReq, opts ...grpc.CallOption) (*AddWordRes, error)
 }
 
 type moderationServiceClient struct {
@@ -47,11 +67,121 @@ func (c *moderationServiceClient) IdentifyAndReplaceText(ctx context.Context, in
 	return out, nil
 }
 
+func (c *moderationServiceClient) HandleReportPost(ctx context.Context, in *ReportPost, opts ...grpc.CallOption) (*SingleLineStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleLineStatusResponse)
+	err := c.cc.Invoke(ctx, ModerationService_HandleReportPost_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moderationServiceClient) HandleReportAccount(ctx context.Context, in *ReportAccount, opts ...grpc.CallOption) (*SingleLineStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleLineStatusResponse)
+	err := c.cc.Invoke(ctx, ModerationService_HandleReportAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moderationServiceClient) HandleResolveReportedPost(ctx context.Context, in *ResolveReportedPost, opts ...grpc.CallOption) (*SingleLineStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleLineStatusResponse)
+	err := c.cc.Invoke(ctx, ModerationService_HandleResolveReportedPost_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moderationServiceClient) HandleResolveReportedAccount(ctx context.Context, in *ResolveReportedAccount, opts ...grpc.CallOption) (*SingleLineStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SingleLineStatusResponse)
+	err := c.cc.Invoke(ctx, ModerationService_HandleResolveReportedAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moderationServiceClient) HandleGetReportAccountList(ctx context.Context, in *GetReportedAccountListRequest, opts ...grpc.CallOption) (*GetReportedAccountListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetReportedAccountListResponse)
+	err := c.cc.Invoke(ctx, ModerationService_HandleGetReportAccountList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moderationServiceClient) GetReportedPosts(ctx context.Context, in *GetReportedPostRequest, opts ...grpc.CallOption) (*GetReportedPostResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetReportedPostResponse)
+	err := c.cc.Invoke(ctx, ModerationService_GetReportedPosts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moderationServiceClient) GetListBanWords(ctx context.Context, in *GetListBanWordsReq, opts ...grpc.CallOption) (*GetListBanWordsRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetListBanWordsRes)
+	err := c.cc.Invoke(ctx, ModerationService_GetListBanWords_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moderationServiceClient) EditWord(ctx context.Context, in *EditWordReq, opts ...grpc.CallOption) (*EditWordRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EditWordRes)
+	err := c.cc.Invoke(ctx, ModerationService_EditWord_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moderationServiceClient) DeleteWord(ctx context.Context, in *DeleteWordReq, opts ...grpc.CallOption) (*DeleteWordRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteWordRes)
+	err := c.cc.Invoke(ctx, ModerationService_DeleteWord_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moderationServiceClient) AddWord(ctx context.Context, in *AddWordReq, opts ...grpc.CallOption) (*AddWordRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddWordRes)
+	err := c.cc.Invoke(ctx, ModerationService_AddWord_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ModerationServiceServer is the server API for ModerationService service.
 // All implementations must embed UnimplementedModerationServiceServer
 // for forward compatibility.
 type ModerationServiceServer interface {
 	IdentifyAndReplaceText(context.Context, *IdentifyAndReplaceTextRequest) (*IdentifyAndReplaceTextResponse, error)
+	HandleReportPost(context.Context, *ReportPost) (*SingleLineStatusResponse, error)
+	HandleReportAccount(context.Context, *ReportAccount) (*SingleLineStatusResponse, error)
+	HandleResolveReportedPost(context.Context, *ResolveReportedPost) (*SingleLineStatusResponse, error)
+	HandleResolveReportedAccount(context.Context, *ResolveReportedAccount) (*SingleLineStatusResponse, error)
+	HandleGetReportAccountList(context.Context, *GetReportedAccountListRequest) (*GetReportedAccountListResponse, error)
+	GetReportedPosts(context.Context, *GetReportedPostRequest) (*GetReportedPostResponse, error)
+	GetListBanWords(context.Context, *GetListBanWordsReq) (*GetListBanWordsRes, error)
+	EditWord(context.Context, *EditWordReq) (*EditWordRes, error)
+	DeleteWord(context.Context, *DeleteWordReq) (*DeleteWordRes, error)
+	AddWord(context.Context, *AddWordReq) (*AddWordRes, error)
 	mustEmbedUnimplementedModerationServiceServer()
 }
 
@@ -64,6 +194,36 @@ type UnimplementedModerationServiceServer struct{}
 
 func (UnimplementedModerationServiceServer) IdentifyAndReplaceText(context.Context, *IdentifyAndReplaceTextRequest) (*IdentifyAndReplaceTextResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IdentifyAndReplaceText not implemented")
+}
+func (UnimplementedModerationServiceServer) HandleReportPost(context.Context, *ReportPost) (*SingleLineStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleReportPost not implemented")
+}
+func (UnimplementedModerationServiceServer) HandleReportAccount(context.Context, *ReportAccount) (*SingleLineStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleReportAccount not implemented")
+}
+func (UnimplementedModerationServiceServer) HandleResolveReportedPost(context.Context, *ResolveReportedPost) (*SingleLineStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleResolveReportedPost not implemented")
+}
+func (UnimplementedModerationServiceServer) HandleResolveReportedAccount(context.Context, *ResolveReportedAccount) (*SingleLineStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleResolveReportedAccount not implemented")
+}
+func (UnimplementedModerationServiceServer) HandleGetReportAccountList(context.Context, *GetReportedAccountListRequest) (*GetReportedAccountListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleGetReportAccountList not implemented")
+}
+func (UnimplementedModerationServiceServer) GetReportedPosts(context.Context, *GetReportedPostRequest) (*GetReportedPostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReportedPosts not implemented")
+}
+func (UnimplementedModerationServiceServer) GetListBanWords(context.Context, *GetListBanWordsReq) (*GetListBanWordsRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetListBanWords not implemented")
+}
+func (UnimplementedModerationServiceServer) EditWord(context.Context, *EditWordReq) (*EditWordRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EditWord not implemented")
+}
+func (UnimplementedModerationServiceServer) DeleteWord(context.Context, *DeleteWordReq) (*DeleteWordRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteWord not implemented")
+}
+func (UnimplementedModerationServiceServer) AddWord(context.Context, *AddWordReq) (*AddWordRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddWord not implemented")
 }
 func (UnimplementedModerationServiceServer) mustEmbedUnimplementedModerationServiceServer() {}
 func (UnimplementedModerationServiceServer) testEmbeddedByValue()                           {}
@@ -104,6 +264,186 @@ func _ModerationService_IdentifyAndReplaceText_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ModerationService_HandleReportPost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportPost)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).HandleReportPost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_HandleReportPost_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).HandleReportPost(ctx, req.(*ReportPost))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModerationService_HandleReportAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).HandleReportAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_HandleReportAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).HandleReportAccount(ctx, req.(*ReportAccount))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModerationService_HandleResolveReportedPost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveReportedPost)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).HandleResolveReportedPost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_HandleResolveReportedPost_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).HandleResolveReportedPost(ctx, req.(*ResolveReportedPost))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModerationService_HandleResolveReportedAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveReportedAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).HandleResolveReportedAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_HandleResolveReportedAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).HandleResolveReportedAccount(ctx, req.(*ResolveReportedAccount))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModerationService_HandleGetReportAccountList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReportedAccountListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).HandleGetReportAccountList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_HandleGetReportAccountList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).HandleGetReportAccountList(ctx, req.(*GetReportedAccountListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModerationService_GetReportedPosts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReportedPostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).GetReportedPosts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_GetReportedPosts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).GetReportedPosts(ctx, req.(*GetReportedPostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModerationService_GetListBanWords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetListBanWordsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).GetListBanWords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_GetListBanWords_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).GetListBanWords(ctx, req.(*GetListBanWordsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModerationService_EditWord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditWordReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).EditWord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_EditWord_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).EditWord(ctx, req.(*EditWordReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModerationService_DeleteWord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteWordReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).DeleteWord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_DeleteWord_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).DeleteWord(ctx, req.(*DeleteWordReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModerationService_AddWord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddWordReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModerationServiceServer).AddWord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModerationService_AddWord_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModerationServiceServer).AddWord(ctx, req.(*AddWordReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ModerationService_ServiceDesc is the grpc.ServiceDesc for ModerationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +454,46 @@ var ModerationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "IdentifyAndReplaceText",
 			Handler:    _ModerationService_IdentifyAndReplaceText_Handler,
+		},
+		{
+			MethodName: "HandleReportPost",
+			Handler:    _ModerationService_HandleReportPost_Handler,
+		},
+		{
+			MethodName: "HandleReportAccount",
+			Handler:    _ModerationService_HandleReportAccount_Handler,
+		},
+		{
+			MethodName: "HandleResolveReportedPost",
+			Handler:    _ModerationService_HandleResolveReportedPost_Handler,
+		},
+		{
+			MethodName: "HandleResolveReportedAccount",
+			Handler:    _ModerationService_HandleResolveReportedAccount_Handler,
+		},
+		{
+			MethodName: "HandleGetReportAccountList",
+			Handler:    _ModerationService_HandleGetReportAccountList_Handler,
+		},
+		{
+			MethodName: "GetReportedPosts",
+			Handler:    _ModerationService_GetReportedPosts_Handler,
+		},
+		{
+			MethodName: "GetListBanWords",
+			Handler:    _ModerationService_GetListBanWords_Handler,
+		},
+		{
+			MethodName: "EditWord",
+			Handler:    _ModerationService_EditWord_Handler,
+		},
+		{
+			MethodName: "DeleteWord",
+			Handler:    _ModerationService_DeleteWord_Handler,
+		},
+		{
+			MethodName: "AddWord",
+			Handler:    _ModerationService_AddWord_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

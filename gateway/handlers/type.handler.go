@@ -674,6 +674,7 @@ type MarkAsReadNotiResponse struct {
 }
 
 type ChatList struct {
+	ChatID                string `json:"chat_id"`
 	AccountID             uint64 `json:"account_id"`
 	TargetAccountID       uint64 `json:"target_account_id"`
 	DisplayName           string `json:"display_name"`
@@ -689,4 +690,284 @@ type GetChatListRequest struct {
 	AccountID uint64 `json:"account_id"`
 	Page      uint32 `json:"page"`
 	PageSize  uint32 `json:"page_size"`
+}
+
+type GetMessageRequest struct {
+	ChatID           string `json:"chat_id"`
+	Page             uint32 `json:"page"`
+	PageSize         uint32 `json:"page_size"`
+	RequestAccountID uint32 `json:"request_account_id"`
+}
+
+type GetMessageResponse struct {
+	ChatID             string            `json:"chat_id"`
+	Messages           []MessageData     `json:"messages"`
+	PartnerDisplayInfo SingleAccountInfo `json:"partner_display_info"`
+	Page               uint32            `json:"page"`
+	PageSize           uint32            `json:"page_size"`
+}
+type MessageData struct {
+	ID         string `json:"id"`
+	ChatID     string `json:"chat_id"`
+	SenderID   uint32 `json:"sender_id"`
+	ReceiverID uint32 `json:"receiver_id"`
+	Content    string `json:"content"`
+	Type       string `json:"type"`
+	Timestamp  int64  `json:"timestamp"`
+	CreatedAt  int64  `json:"created_at"`
+	UpdatedAt  int64  `json:"updated_at"`
+	IsDeleted  bool   `json:"is_deleted"`
+	IsRecalled bool   `json:"is_recalled"`
+	IsRead     bool   `json:"is_read"`
+}
+
+type ActionMessageRequest struct {
+	SenderID   uint32 `json:"sender_id"`
+	ReceiverID uint32 `json:"receiver_id"`
+	Timestamp  int64  `json:"timestamp"`
+	Action     string `json:"action"`
+}
+
+type ActionMessageResponse struct {
+	Success bool `json:"success"`
+}
+
+type ReceiverMarkMessageAsReadRequest struct {
+	AccountID uint32 `json:"account_id"`
+	ChatID    string `json:"chat_id"`
+}
+
+type ReceiverMarkMessageAsReadResponse struct {
+	Success bool `json:"success"`
+}
+
+type ReportPost struct {
+	PostID     uint32 `json:"post_id"`
+	ReportedBy uint32 `json:"reported_by"`
+	Reason     string `json:"reason"`
+}
+
+type ReportUser struct {
+	AccountID  uint32 `json:"account_id"`
+	ReportedBy uint32 `json:"reported_by"`
+	Reason     string `json:"reason"`
+}
+
+type ResolveReportedPost struct {
+	PostID     uint32 `json:"post_id"`
+	ResolvedBy uint32 `json:"resolved_by"`
+	Method     string `json:"method"`
+}
+
+type ResolveReportedAccount struct {
+	AccountID  uint32 `json:"account_id"`
+	ResolvedBy uint32 `json:"resolved_by"`
+	Method     string `json:"method"`
+}
+
+type SingleStatusResponse struct {
+	Success bool `json:"success"`
+}
+
+type SearchAccountRequest struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+	QueryString      string `json:"query_string"`
+	Page             uint32 `json:"page"`
+	PageSize         uint32 `json:"page_size"`
+}
+
+type SearchAccountResponse struct {
+	Accounts []SingleAccountInfo `json:"accounts"`
+	Page     uint32              `json:"page"`
+	PageSize uint32              `json:"page_size"`
+}
+
+type GetNewRegisterationDataRequest struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+	PeriodLabel      string `json:"period_label"`
+	PeriodYear       uint32 `json:"period_year"`
+	PeriodMonth      uint32 `json:"period_month"`
+}
+
+type GetNewRegisterationDataResponse struct {
+	RequestAccountID uint64      `json:"request_account_id"`
+	PeriodLabel      string      `json:"period_label"`
+	TotalUsers       uint32      `json:"total_users"`
+	Data             []DataTerms `json:"data"`
+}
+
+type DataTerms struct {
+	Label string `json:"label"`
+	Count uint64 `json:"count"`
+}
+
+type GetUserTypeRequest struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+}
+
+type GetUserTypeResponse struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+	TotalUsers       uint32 `json:"total_users"`
+	BannedUsers      uint32 `json:"banned_users"`
+	DeletedUsers     uint32 `json:"deleted_users"`
+}
+type GetAccountListRequest struct {
+	RequestID uint32 `json:"request_id"`
+	Page      uint32 `json:"page"`
+	PageSize  uint32 `json:"page_size"`
+}
+
+type AccountRawInfo struct {
+	AccountID     uint32 `json:"account_id"`
+	Username      string `json:"username"`
+	IsBanned      bool   `json:"is_banned"`
+	Method        string `json:"method"`
+	IsSelfDeleted bool   `json:"is_self_deleted"`
+}
+
+type GetAccountListResponse struct {
+	Accounts []AccountRawInfo `json:"accounts"`
+	Page     uint32           `json:"page"`
+	PageSize uint32           `json:"page_size"`
+}
+
+type SearchAccountListRequest struct {
+	RequestID   uint32 `json:"request_id"`
+	QueryString string `json:"query_string"`
+	Page        uint32 `json:"page"`
+	PageSize    uint32 `json:"page_size"`
+}
+
+type SearchAccountListResponse struct {
+	Accounts []AccountRawInfo `json:"accounts"`
+	Page     uint32           `json:"page"`
+	PageSize uint32           `json:"page_size"`
+}
+
+type ResolveBanUserRequest struct {
+	AccountID uint32 `json:"account_id"`
+	Action    string `json:"action"`
+}
+
+type ResolveBanUserResponse struct {
+	Success bool `json:"success"`
+}
+
+type ReportAccountData struct {
+	AccountID     uint32 `json:"account_id"`
+	Reason        string `json:"reason"`
+	Username      string `json:"username"`
+	ResolveStatus string `json:"resolve_status"`
+}
+
+type GetReportedAccountListRequest struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+	Page             uint32 `json:"page"`
+	PageSize         uint32 `json:"page_size"`
+}
+
+type GetReportedAccountListResponse struct {
+	Accounts []ReportAccountData `json:"accounts"`
+	Page     uint32              `json:"page"`
+	PageSize uint32              `json:"page_size"`
+}
+
+type GetNewPostStatisticDataRequest struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+	PeriodLabel      string `json:"period_label"`
+	PeriodYear       uint32 `json:"period_year"`
+	PeriodMonth      uint32 `json:"period_month"`
+}
+
+type GetNewPostStatisticDataResponse struct {
+	RequestAccountID uint64      `json:"request_account_id"`
+	PeriodLabel      string      `json:"period_label"`
+	Data             []DataTerms `json:"data"`
+	TotalPosts       uint32      `json:"total_posts"`
+}
+
+type GetMediaStatisticRequest struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+	PeriodLabel      string `json:"period_label"`
+	PeriodYear       uint32 `json:"period_year"`
+	PeriodMonth      uint32 `json:"period_month"`
+}
+
+type GetMediaStatisticResponse struct {
+	RequestAccountID uint64      `json:"request_account_id"`
+	PeriodLabel      string      `json:"period_label"`
+	Data             []DataTerms `json:"data"`
+	TotalMedias      uint32      `json:"total_medias"`
+}
+
+type GetPostWMediaStatisticRequest struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+	PeriodLabel      string `json:"period_label"`
+	PeriodYear       uint32 `json:"period_year"`
+	PeriodMonth      uint32 `json:"period_month"`
+}
+
+type GetPostWMediaStatisticResponse struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+	TotalPosts       uint32 `json:"total_posts"`
+	TotalPostWMedias uint32 `json:"total_post_w_medias"`
+}
+
+type GetReportedPostRequest struct {
+	RequestAccountID uint64 `json:"request_account_id"`
+	Page             uint32 `json:"page"`
+	PageSize         uint32 `json:"page_size"`
+}
+type GetReportedPostResponse struct {
+	Page          uint32             `json:"page"`
+	PageSize      uint32             `json:"page_size"`
+	ReportedPosts []ReportedPostData `json:"reported_posts"`
+}
+
+type ReportedPostData struct {
+	ID            uint32 `json:"id"`
+	PostID        uint32 `json:"post_id"`
+	Reason        string `json:"reason"`
+	ResolveStatus string `json:"resolve_status"`
+}
+
+type GetListBanWordsReq struct {
+	RequestAccountID uint32 `json:"request_account_id"`
+}
+
+type WordData struct {
+	ID   uint32 `json:"id"`
+	Word string `json:"word"`
+}
+
+type DataSet struct {
+	LanguageCode string     `json:"language_code"`
+	Words        []WordData `json:"words"`
+}
+
+type GetListBanWordsRes struct {
+	Data []DataSet `json:"data"`
+}
+
+type EditWordReq struct {
+	ID      uint32 `json:"id"`
+	Content string `json:"content"`
+}
+
+type EditWordRes struct {
+	Success bool `json:"success"`
+}
+
+type DeleteWordReq struct {
+	ID uint32 `json:"id"`
+}
+
+type DeleteWordRes struct {
+	Success bool `json:"success"`
+}
+
+type AddWordReq struct {
+	RequestAccountID uint32 `json:"request_account_id"`
+	Content          string `json:"content"`
+	LanguageCode     string `json:"language_code"`
 }

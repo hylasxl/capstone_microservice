@@ -15,5 +15,6 @@ func InitializeRoutes(router *mux.Router, clients *ServiceClients) {
 	InitializeOTPRoutes(router, clients)
 	InitMonitoringRoutes(router)
 	InitWebsocketRoute(router, clients)
+	InitModerationRoute(router, clients)
 	InitMessageRoutes(router, clients)
 }

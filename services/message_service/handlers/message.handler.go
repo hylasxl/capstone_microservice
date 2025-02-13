@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -202,6 +203,7 @@ func (s *MessageService) GetChatList(ctx context.Context, req *ms.GetChatListReq
 
 	for _, chat := range chatListResp {
 		response.ChatList = append(response.ChatList, &ms.ChatList{
+			ChatID:                chat.ChatID,
 			AccountID:             uint32(chat.AccountID),
 			TargetAccountID:       uint32(chat.TargetAccountID),
 			DisplayName:           chat.DisplayName,
@@ -214,4 +216,92 @@ func (s *MessageService) GetChatList(ctx context.Context, req *ms.GetChatListReq
 		})
 	}
 	return response, nil
+}
+
+func (s *MessageService) GetMessages(ctx context.Context, req *ms.GetMessageRequest) (*ms.GetMessageResponse, error) {
+
+	messageResp, err := models.GetMessages(ctx, s.MongoClient.Database("admin"), models.GetMessageRequest{
+		ChatID:   req.ChatID,
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ms.GetMessageResponse{}
+
+	for _, message := range messageResp {
+		response.Messages = append(response.Messages, &ms.MessageData{
+			ID:         message.ID,
+			ChatID:     message.ChatID,
+			SenderID:   message.SenderID,
+			ReceiverID: message.ReceiverID,
+			Content:    message.Content,
+			Type:       "text",
+			Timestamp:  message.Timestamp,
+			CreatedAt:  int64(message.CreatedAt),
+			UpdatedAt:  int64(message.UpdatedAt),
+			IsDeleted:  message.IsDeleted,
+			IsRecalled: message.IsRecalled,
+			IsRead:     message.IsRead,
+		})
+	}
+
+	return response, nil
+}
+
+func (s *MessageService) ActionMessage(ctx context.Context, req *ms.ActionMessageRequest) (*ms.ActionMessageResponse, error) {
+
+	switch req.Action {
+	case "delete":
+		{
+			err := models.DeleteMessage(ctx, s.MongoClient.Database("admin"), models.ActionMessageRequest{
+				SenderID:   req.SenderID,
+				ReceiverId: req.ReceiverID,
+				Timestamp:  req.Timestamp,
+			})
+			if err != nil {
+				return nil, err
+			}
+			break
+		}
+	case "recall":
+		{
+			err := models.RecallMessage(ctx, s.MongoClient.Database("admin"), models.ActionMessageRequest{
+				SenderID:   req.SenderID,
+				ReceiverId: req.ReceiverID,
+				Timestamp:  req.Timestamp,
+			})
+			if err != nil {
+				return nil, err
+			}
+			break
+		}
+	default:
+		return &ms.ActionMessageResponse{
+			Success: false,
+		}, errors.New("invalid action")
+	}
+
+	return &ms.ActionMessageResponse{
+		Success: true,
+	}, nil
+}
+
+func (s *MessageService) ReceiverMarkMessageAsRead(ctx context.Context, req *ms.ReceiverMarkMessageAsReadRequest) (*ms.ReceiverMarkMessageAsReadResponse, error) {
+
+	err := models.ReceiverMarkMessageAsRead(ctx, s.MongoClient.Database("admin"), models.ReceiverMarkMessageAsReadRequest{
+		AccountID: uint64(req.AccountID),
+		ChatID:    req.ChatID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &ms.ReceiverMarkMessageAsReadResponse{
+		Success: true,
+	}, nil
 }

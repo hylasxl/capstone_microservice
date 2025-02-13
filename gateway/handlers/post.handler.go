@@ -458,12 +458,12 @@ func HandlerGetSinglePost(postClient post_service.PostServiceClient, userClient 
 
 func HandlerDeletePost(postClient post_service.PostServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var vars = mux.Vars(r)
-		id := vars["id"]
+		var request DeletePostRequest
 
-		postID, err := strconv.ParseUint(id, 10, 64)
-		var request = &DeletePostRequest{
-			PostID: postID,
+		err := json.NewDecoder(r.Body).Decode(&request)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid request", err)
+			return
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -1641,6 +1641,146 @@ func HandlerGetNewFeeds(postClient post_service.PostServiceClient, userClient us
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Failed to encode response", err)
 			return
+		}
+	}
+}
+
+func HandlerGetNewPostStatisticData(postClient post_service.PostServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request GetNewPostStatisticDataRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+
+		periodData := request.PeriodYear
+
+		if request.PeriodLabel == "month" {
+			periodData = request.PeriodYear*100 + (request.PeriodMonth % 100)
+		}
+
+		resp, err := postClient.GetNewPostStatisticData(ctx, &post_service.GetNewPostStatisticDataRequest{
+			PeriodLabel: request.PeriodLabel,
+			PeriodData:  periodData,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to get post statistic data", err)
+			return
+		}
+
+		var data []DataTerms
+		for _, post := range resp.Data {
+			data = append(data, DataTerms{
+				Label: post.Label,
+				Count: post.Count,
+			})
+		}
+
+		var response = &GetNewPostStatisticDataResponse{
+			RequestAccountID: request.RequestAccountID,
+			Data:             data,
+			PeriodLabel:      request.PeriodLabel,
+			TotalPosts:       uint32(resp.TotalPosts),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to encode response", err)
+			return
+		}
+	}
+}
+
+func HandlerGetMediaStatistic(postClient post_service.PostServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request GetMediaStatisticRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+		periodData := request.PeriodYear
+
+		if request.PeriodLabel == "month" {
+			periodData = request.PeriodYear*100 + (request.PeriodMonth % 100)
+		}
+		resp, err := postClient.GetMediaStatistic(ctx, &post_service.GetMediaStatisticRequest{
+			PeriodLabel: request.PeriodLabel,
+			PeriodData:  periodData,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to get post media statistic data", err)
+			return
+		}
+
+		var data []DataTerms
+		for _, post := range resp.Data {
+			data = append(data, DataTerms{
+				Label: post.Label,
+				Count: post.Count,
+			})
+		}
+
+		var response = &GetMediaStatisticResponse{
+			RequestAccountID: request.RequestAccountID,
+			Data:             data,
+			PeriodLabel:      request.PeriodLabel,
+			TotalMedias:      uint32(resp.TotalMedias),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to encode response", err)
+		}
+
+	}
+}
+
+func HandlerGetPostWMediaStatistic(postClient post_service.PostServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request GetPostWMediaStatisticRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+
+		periodData := request.PeriodYear
+
+		if request.PeriodLabel == "month" {
+			periodData = request.PeriodYear*100 + (request.PeriodMonth % 100)
+		}
+
+		resp, err := postClient.GetPostWMediaStatistic(ctx, &post_service.GetPostWMediaStatisticRequest{
+			PeriodLabel: request.PeriodLabel,
+			PeriodData:  periodData,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to get post media statistic data", err)
+			return
+		}
+
+		var response = &GetPostWMediaStatisticResponse{
+			RequestAccountID: request.RequestAccountID,
+			TotalPosts:       resp.TotalPost,
+			TotalPostWMedias: resp.TotalPostWMedia,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to encode response", err)
 		}
 	}
 }

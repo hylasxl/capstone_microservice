@@ -4,8 +4,6 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	"online_history_service/configs"
-	"online_history_service/models"
 )
 
 func main() {
@@ -15,13 +13,6 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	db := configs.InitMySQL()
-	err = db.AutoMigrate(
-		&models.OnlineHistory{},
-	)
-	if err != nil {
-		log.Fatalf("failed to auto migrate: %v", err)
-	}
 
 	log.Println("Online history service started on port 50058")
 	if err := grpcServer.Serve(lis); err != nil {

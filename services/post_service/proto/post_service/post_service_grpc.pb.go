@@ -19,33 +19,37 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PostService_CreateNewPost_FullMethodName       = "/post.PostService/CreateNewPost"
-	PostService_UploadPostImage_FullMethodName     = "/post.PostService/UploadPostImage"
-	PostService_SharePost_FullMethodName           = "/post.PostService/SharePost"
-	PostService_CommentPost_FullMethodName         = "/post.PostService/CommentPost"
-	PostService_GetSinglePost_FullMethodName       = "/post.PostService/GetSinglePost"
-	PostService_EditPost_FullMethodName            = "/post.PostService/EditPost"
-	PostService_DeletePost_FullMethodName          = "/post.PostService/DeletePost"
-	PostService_ReplyComment_FullMethodName        = "/post.PostService/ReplyComment"
-	PostService_EditComment_FullMethodName         = "/post.PostService/EditComment"
-	PostService_DeleteComment_FullMethodName       = "/post.PostService/DeleteComment"
-	PostService_DeletePostImage_FullMethodName     = "/post.PostService/DeletePostImage"
-	PostService_ReactPost_FullMethodName           = "/post.PostService/ReactPost"
-	PostService_RemoveReactPost_FullMethodName     = "/post.PostService/RemoveReactPost"
-	PostService_ReactImage_FullMethodName          = "/post.PostService/ReactImage"
-	PostService_RemoveReactImage_FullMethodName    = "/post.PostService/RemoveReactImage"
-	PostService_CommentImage_FullMethodName        = "/post.PostService/CommentImage"
-	PostService_ReplyCommentImage_FullMethodName   = "/post.PostService/ReplyCommentImage"
-	PostService_EditCommentImage_FullMethodName    = "/post.PostService/EditCommentImage"
-	PostService_DeleteCommentImage_FullMethodName  = "/post.PostService/DeleteCommentImage"
-	PostService_CountPostComment_FullMethodName    = "/post.PostService/CountPostComment"
-	PostService_CountPostReaction_FullMethodName   = "/post.PostService/CountPostReaction"
-	PostService_CountPostShare_FullMethodName      = "/post.PostService/CountPostShare"
-	PostService_GetPostComment_FullMethodName      = "/post.PostService/GetPostComment"
-	PostService_GetPostReaction_FullMethodName     = "/post.PostService/GetPostReaction"
-	PostService_GetPostMediaComment_FullMethodName = "/post.PostService/GetPostMediaComment"
-	PostService_GetWallPostList_FullMethodName     = "/post.PostService/GetWallPostList"
-	PostService_GetNewFeeds_FullMethodName         = "/post.PostService/GetNewFeeds"
+	PostService_CreateNewPost_FullMethodName           = "/post.PostService/CreateNewPost"
+	PostService_UploadPostImage_FullMethodName         = "/post.PostService/UploadPostImage"
+	PostService_SharePost_FullMethodName               = "/post.PostService/SharePost"
+	PostService_CommentPost_FullMethodName             = "/post.PostService/CommentPost"
+	PostService_GetSinglePost_FullMethodName           = "/post.PostService/GetSinglePost"
+	PostService_EditPost_FullMethodName                = "/post.PostService/EditPost"
+	PostService_DeletePost_FullMethodName              = "/post.PostService/DeletePost"
+	PostService_ReplyComment_FullMethodName            = "/post.PostService/ReplyComment"
+	PostService_EditComment_FullMethodName             = "/post.PostService/EditComment"
+	PostService_DeleteComment_FullMethodName           = "/post.PostService/DeleteComment"
+	PostService_DeletePostImage_FullMethodName         = "/post.PostService/DeletePostImage"
+	PostService_ReactPost_FullMethodName               = "/post.PostService/ReactPost"
+	PostService_RemoveReactPost_FullMethodName         = "/post.PostService/RemoveReactPost"
+	PostService_ReactImage_FullMethodName              = "/post.PostService/ReactImage"
+	PostService_RemoveReactImage_FullMethodName        = "/post.PostService/RemoveReactImage"
+	PostService_CommentImage_FullMethodName            = "/post.PostService/CommentImage"
+	PostService_ReplyCommentImage_FullMethodName       = "/post.PostService/ReplyCommentImage"
+	PostService_EditCommentImage_FullMethodName        = "/post.PostService/EditCommentImage"
+	PostService_DeleteCommentImage_FullMethodName      = "/post.PostService/DeleteCommentImage"
+	PostService_CountPostComment_FullMethodName        = "/post.PostService/CountPostComment"
+	PostService_CountPostReaction_FullMethodName       = "/post.PostService/CountPostReaction"
+	PostService_CountPostShare_FullMethodName          = "/post.PostService/CountPostShare"
+	PostService_GetPostComment_FullMethodName          = "/post.PostService/GetPostComment"
+	PostService_GetPostReaction_FullMethodName         = "/post.PostService/GetPostReaction"
+	PostService_GetPostMediaComment_FullMethodName     = "/post.PostService/GetPostMediaComment"
+	PostService_GetWallPostList_FullMethodName         = "/post.PostService/GetWallPostList"
+	PostService_GetNewFeeds_FullMethodName             = "/post.PostService/GetNewFeeds"
+	PostService_DeletePostByAdmin_FullMethodName       = "/post.PostService/DeletePostByAdmin"
+	PostService_GetNewPostStatisticData_FullMethodName = "/post.PostService/GetNewPostStatisticData"
+	PostService_GetMediaStatistic_FullMethodName       = "/post.PostService/GetMediaStatistic"
+	PostService_GetPostWMediaStatistic_FullMethodName  = "/post.PostService/GetPostWMediaStatistic"
 )
 
 // PostServiceClient is the client API for PostService service.
@@ -79,6 +83,10 @@ type PostServiceClient interface {
 	GetPostMediaComment(ctx context.Context, in *GetPostMediaCommentRequest, opts ...grpc.CallOption) (*GetPostMediaCommentResponse, error)
 	GetWallPostList(ctx context.Context, in *GetWallPostListRequest, opts ...grpc.CallOption) (*GetWallPostListResponse, error)
 	GetNewFeeds(ctx context.Context, in *GetNewFeedsRequest, opts ...grpc.CallOption) (*GetNewFeedsResponse, error)
+	DeletePostByAdmin(ctx context.Context, in *AdminDeletePostRequest, opts ...grpc.CallOption) (*AdminDeletePostResponse, error)
+	GetNewPostStatisticData(ctx context.Context, in *GetNewPostStatisticDataRequest, opts ...grpc.CallOption) (*GetNewPostStatisticDataResponse, error)
+	GetMediaStatistic(ctx context.Context, in *GetMediaStatisticRequest, opts ...grpc.CallOption) (*GetMediaStatisticResponse, error)
+	GetPostWMediaStatistic(ctx context.Context, in *GetPostWMediaStatisticRequest, opts ...grpc.CallOption) (*GetPostWMediaStatisticResponse, error)
 }
 
 type postServiceClient struct {
@@ -359,6 +367,46 @@ func (c *postServiceClient) GetNewFeeds(ctx context.Context, in *GetNewFeedsRequ
 	return out, nil
 }
 
+func (c *postServiceClient) DeletePostByAdmin(ctx context.Context, in *AdminDeletePostRequest, opts ...grpc.CallOption) (*AdminDeletePostResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminDeletePostResponse)
+	err := c.cc.Invoke(ctx, PostService_DeletePostByAdmin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *postServiceClient) GetNewPostStatisticData(ctx context.Context, in *GetNewPostStatisticDataRequest, opts ...grpc.CallOption) (*GetNewPostStatisticDataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetNewPostStatisticDataResponse)
+	err := c.cc.Invoke(ctx, PostService_GetNewPostStatisticData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *postServiceClient) GetMediaStatistic(ctx context.Context, in *GetMediaStatisticRequest, opts ...grpc.CallOption) (*GetMediaStatisticResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMediaStatisticResponse)
+	err := c.cc.Invoke(ctx, PostService_GetMediaStatistic_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *postServiceClient) GetPostWMediaStatistic(ctx context.Context, in *GetPostWMediaStatisticRequest, opts ...grpc.CallOption) (*GetPostWMediaStatisticResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPostWMediaStatisticResponse)
+	err := c.cc.Invoke(ctx, PostService_GetPostWMediaStatistic_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PostServiceServer is the server API for PostService service.
 // All implementations must embed UnimplementedPostServiceServer
 // for forward compatibility.
@@ -390,6 +438,10 @@ type PostServiceServer interface {
 	GetPostMediaComment(context.Context, *GetPostMediaCommentRequest) (*GetPostMediaCommentResponse, error)
 	GetWallPostList(context.Context, *GetWallPostListRequest) (*GetWallPostListResponse, error)
 	GetNewFeeds(context.Context, *GetNewFeedsRequest) (*GetNewFeedsResponse, error)
+	DeletePostByAdmin(context.Context, *AdminDeletePostRequest) (*AdminDeletePostResponse, error)
+	GetNewPostStatisticData(context.Context, *GetNewPostStatisticDataRequest) (*GetNewPostStatisticDataResponse, error)
+	GetMediaStatistic(context.Context, *GetMediaStatisticRequest) (*GetMediaStatisticResponse, error)
+	GetPostWMediaStatistic(context.Context, *GetPostWMediaStatisticRequest) (*GetPostWMediaStatisticResponse, error)
 	mustEmbedUnimplementedPostServiceServer()
 }
 
@@ -480,6 +532,18 @@ func (UnimplementedPostServiceServer) GetWallPostList(context.Context, *GetWallP
 }
 func (UnimplementedPostServiceServer) GetNewFeeds(context.Context, *GetNewFeedsRequest) (*GetNewFeedsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNewFeeds not implemented")
+}
+func (UnimplementedPostServiceServer) DeletePostByAdmin(context.Context, *AdminDeletePostRequest) (*AdminDeletePostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePostByAdmin not implemented")
+}
+func (UnimplementedPostServiceServer) GetNewPostStatisticData(context.Context, *GetNewPostStatisticDataRequest) (*GetNewPostStatisticDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNewPostStatisticData not implemented")
+}
+func (UnimplementedPostServiceServer) GetMediaStatistic(context.Context, *GetMediaStatisticRequest) (*GetMediaStatisticResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMediaStatistic not implemented")
+}
+func (UnimplementedPostServiceServer) GetPostWMediaStatistic(context.Context, *GetPostWMediaStatisticRequest) (*GetPostWMediaStatisticResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPostWMediaStatistic not implemented")
 }
 func (UnimplementedPostServiceServer) mustEmbedUnimplementedPostServiceServer() {}
 func (UnimplementedPostServiceServer) testEmbeddedByValue()                     {}
@@ -988,6 +1052,78 @@ func _PostService_GetNewFeeds_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PostService_DeletePostByAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminDeletePostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServiceServer).DeletePostByAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PostService_DeletePostByAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServiceServer).DeletePostByAdmin(ctx, req.(*AdminDeletePostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PostService_GetNewPostStatisticData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNewPostStatisticDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServiceServer).GetNewPostStatisticData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PostService_GetNewPostStatisticData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServiceServer).GetNewPostStatisticData(ctx, req.(*GetNewPostStatisticDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PostService_GetMediaStatistic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMediaStatisticRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServiceServer).GetMediaStatistic(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PostService_GetMediaStatistic_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServiceServer).GetMediaStatistic(ctx, req.(*GetMediaStatisticRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PostService_GetPostWMediaStatistic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPostWMediaStatisticRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServiceServer).GetPostWMediaStatistic(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PostService_GetPostWMediaStatistic_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServiceServer).GetPostWMediaStatistic(ctx, req.(*GetPostWMediaStatisticRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PostService_ServiceDesc is the grpc.ServiceDesc for PostService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1102,6 +1238,22 @@ var PostService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetNewFeeds",
 			Handler:    _PostService_GetNewFeeds_Handler,
+		},
+		{
+			MethodName: "DeletePostByAdmin",
+			Handler:    _PostService_DeletePostByAdmin_Handler,
+		},
+		{
+			MethodName: "GetNewPostStatisticData",
+			Handler:    _PostService_GetNewPostStatisticData_Handler,
+		},
+		{
+			MethodName: "GetMediaStatistic",
+			Handler:    _PostService_GetMediaStatistic_Handler,
+		},
+		{
+			MethodName: "GetPostWMediaStatistic",
+			Handler:    _PostService_GetPostWMediaStatistic_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

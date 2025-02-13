@@ -7,6 +7,7 @@ import (
 
 func InitNotificationRoutes(router *mux.Router, clients *ServiceClients) {
 	notificationRoutes := router.PathPrefix("/api/v1/notifications").Subrouter()
+	
 	notificationRoutes.HandleFunc("/register-device", handlers.HandlerRegisterDevice(clients.NotificationService)).Methods("POST")
 	notificationRoutes.HandleFunc("/mark-read", handlers.HandlerMarkAsReadNoti(clients.NotificationService)).Methods("POST")
 

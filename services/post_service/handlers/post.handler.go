@@ -135,9 +135,6 @@ func (s *PostService) schedulePost(postID uint, timestamp int64) error {
 }
 
 func (s *PostService) UploadPostImage(ctx context.Context, in *ps.UploadImageRequest) (*ps.UploadImageResponse, error) {
-	fmt.Println("Connected to iuploaf post image")
-	fmt.Println(len(in.Medias))
-	fmt.Println(in.PostID)
 	if len(in.Medias) == 0 {
 		return &ps.UploadImageResponse{Error: "No media files provided"}, nil
 	}
@@ -337,13 +334,6 @@ func (s *PostService) DeletePost(ctx context.Context, in *ps.DeletePostRequest) 
 			log.Println(errMsg)
 			return &ps.DeletePostResponse{Error: errMsg}, err
 		}
-	}
-
-	if err := tx.Delete(existingPost).Error; err != nil {
-		tx.Rollback()
-		errMsg := fmt.Sprintf("Failed to delete post with ID %d: %v", in.PostID, err)
-		log.Println(errMsg)
-		return &ps.DeletePostResponse{Error: errMsg}, err
 	}
 
 	if err := tx.Model(&models.Post{}).Where("id = ?", in.PostID).Update("is_self_deleted", true).Error; err != nil {
@@ -2372,6 +2362,7 @@ func getScoreByAccountID(interactions []*ps.InteractionScore, accountID uint64) 
 			return interaction.Score, true
 		}
 	}
+
 	return 0, false
 }
 
@@ -2382,4 +2373,242 @@ func checkIsFriend(friendListIDs []uint64, accountID uint64) bool {
 		}
 	}
 	return false
+}
+
+func (s *PostService) DeletePostByAdmin(ctx context.Context, in *ps.AdminDeletePostRequest) (*ps.AdminDeletePostResponse, error) {
+	if in.PostID <= 0 {
+		return nil, errors.New("invalid post id")
+	}
+
+	tx := s.DB.Begin()
+
+	var existingPost *models.Post
+	if err := tx.Where("id = ?", uint(in.PostID)).First(&existingPost).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			errMsg := fmt.Sprintf("Failed to find post with ID %d: %v", in.PostID, err)
+			log.Println(errMsg)
+			return nil, err
+		} else {
+			tx.Rollback()
+			errMsg := fmt.Sprintf("Failed to find post with ID %d: %v", in.PostID, err)
+			log.Println(errMsg)
+			return nil, err
+		}
+	}
+
+	if err := tx.Model(&models.Post{}).Where("id = ?", in.PostID).Update("is_deleted_by_admin", true).Error; err != nil {
+		tx.Rollback()
+		errMsg := fmt.Sprintf("Failed to delete post with ID %d: %v", in.PostID, err)
+		log.Println(errMsg)
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		errMsg := fmt.Sprintf("Transaction commit failed: %v", err)
+		log.Println(errMsg)
+		return nil, err
+	}
+
+	return &ps.AdminDeletePostResponse{
+		Success: true,
+	}, nil
+}
+
+func (s *PostService) GetNewPostStatisticData(ctx context.Context, in *ps.GetNewPostStatisticDataRequest) (*ps.GetNewPostStatisticDataResponse, error) {
+	response := &ps.GetNewPostStatisticDataResponse{}
+
+	var data []*ps.DataTerms
+	var totalPosts int64
+
+	currentYear, currentMonth, currentDay := time.Now().Date()
+
+	if in.PeriodLabel == "year" {
+		requestedYear := int(in.PeriodData)
+
+		for i := 1; i <= 12; i++ {
+			monthLabel := fmt.Sprintf("%d-%02d", requestedYear, i)
+			var count int64
+
+			if requestedYear < currentYear || (requestedYear == currentYear && i <= int(currentMonth)) {
+				s.DB.Model(&models.Post{}).
+					Where("YEAR(created_at) = ? AND MONTH(created_at) = ?", requestedYear, i).
+					Count(&count)
+				totalPosts += count
+			} else {
+				count = 0
+			}
+
+			data = append(data, &ps.DataTerms{
+				Label: monthLabel,
+				Count: uint64(count),
+			})
+		}
+	} else if in.PeriodLabel == "month" {
+		requestedYear := int(in.PeriodData / 100)
+		requestedMonth := int(in.PeriodData % 100)
+
+		firstDay := time.Date(requestedYear, time.Month(requestedMonth), 1, 0, 0, 0, 0, time.UTC)
+		lastDay := firstDay.AddDate(0, 1, -1).Day()
+
+		for i := 1; i <= lastDay; i++ {
+			dayLabel := fmt.Sprintf("%d-%02d-%02d", requestedYear, requestedMonth, i)
+			var count int64
+
+			if requestedYear < currentYear ||
+				(requestedYear == currentYear && requestedMonth < int(currentMonth)) ||
+				(requestedYear == currentYear && requestedMonth == int(currentMonth) && i <= currentDay) {
+				s.DB.Model(&models.Post{}).
+					Where("DATE(created_at) = ?", dayLabel).
+					Count(&count)
+				totalPosts += count
+			} else {
+				count = 0
+			}
+
+			data = append(data, &ps.DataTerms{
+				Label: dayLabel,
+				Count: uint64(count),
+			})
+		}
+	}
+
+	response.TotalPosts = uint64(totalPosts)
+	response.Data = data
+	return response, nil
+}
+
+func (s *PostService) GetMediaStatistic(ctx context.Context, in *ps.GetMediaStatisticRequest) (*ps.GetMediaStatisticResponse, error) {
+	response := &ps.GetMediaStatisticResponse{}
+
+	var data []*ps.DataTerms
+	var totalMedias int64
+
+	currentYear, currentMonth, currentDay := time.Now().Date()
+
+	if in.PeriodLabel == "year" {
+		requestedYear := int(in.PeriodData)
+
+		for i := 1; i <= 12; i++ {
+			monthLabel := fmt.Sprintf("%d-%02d", requestedYear, i)
+			var count int64
+
+			if requestedYear < currentYear || (requestedYear == currentYear && i <= int(currentMonth)) {
+				s.DB.Model(&models.PostMultiMedia{}).
+					Where("YEAR(created_at) = ? AND MONTH(created_at) = ?", requestedYear, i).
+					Count(&count)
+				totalMedias += count
+			} else {
+				count = 0
+			}
+
+			data = append(data, &ps.DataTerms{
+				Label: monthLabel,
+				Count: uint64(count),
+			})
+		}
+	} else if in.PeriodLabel == "month" {
+		requestedYear := int(in.PeriodData / 100)
+		requestedMonth := int(in.PeriodData % 100)
+
+		firstDay := time.Date(requestedYear, time.Month(requestedMonth), 1, 0, 0, 0, 0, time.UTC)
+		lastDay := firstDay.AddDate(0, 1, -1).Day()
+
+		for i := 1; i <= lastDay; i++ {
+			dayLabel := fmt.Sprintf("%d-%02d-%02d", requestedYear, requestedMonth, i)
+			var count int64
+
+			if requestedYear < currentYear ||
+				(requestedYear == currentYear && requestedMonth < int(currentMonth)) ||
+				(requestedYear == currentYear && requestedMonth == int(currentMonth) && i <= currentDay) {
+				s.DB.Model(&models.PostMultiMedia{}).
+					Where("DATE(created_at) = ?", dayLabel).
+					Count(&count)
+				totalMedias += count
+			} else {
+				count = 0
+			}
+
+			data = append(data, &ps.DataTerms{
+				Label: dayLabel,
+				Count: uint64(count),
+			})
+		}
+	}
+
+	response.TotalMedias = uint64(totalMedias)
+	response.Data = data
+	return response, nil
+}
+
+func (s *PostService) GetPostWMediaStatistic(ctx context.Context, in *ps.GetPostWMediaStatisticRequest) (*ps.GetPostWMediaStatisticResponse, error) {
+	response := &ps.GetPostWMediaStatisticResponse{}
+
+	var totalPosts int64
+	var totalPostsWithMedia int64
+
+	currentYear, currentMonth, currentDay := time.Now().Date()
+
+	if in.PeriodLabel == "year" {
+		year := int(in.PeriodData)
+
+		for i := 1; i <= 12; i++ {
+			var count int64
+			var countWithMedia int64
+
+			if year < currentYear || (year == currentYear && i <= int(currentMonth)) {
+				s.DB.Model(&models.Post{}).
+					Where("YEAR(created_at) = ? AND MONTH(created_at) = ?", year, i).
+					Count(&count)
+
+				s.DB.Model(&models.Post{}).
+					Joins("JOIN post_multi_media ON post_multi_media.post_id = posts.id").
+					Where("YEAR(posts.created_at) = ? AND MONTH(posts.created_at) = ?", year, i).
+					Distinct("posts.id").
+					Count(&countWithMedia)
+			} else {
+				count = 0
+				countWithMedia = 0
+			}
+
+			totalPosts += count
+			totalPostsWithMedia += countWithMedia
+		}
+	} else if in.PeriodLabel == "month" {
+		year := int(in.PeriodData / 100)
+		month := int(in.PeriodData % 100)
+
+		firstDay := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+		lastDay := firstDay.AddDate(0, 1, -1).Day()
+
+		for i := 1; i <= lastDay; i++ {
+			dayLabel := fmt.Sprintf("%d-%02d-%02d", year, month, i)
+			var count int64
+			var countWithMedia int64
+
+			if year < currentYear ||
+				(year == currentYear && month < int(currentMonth)) ||
+				(year == currentYear && month == int(currentMonth) && i <= currentDay) {
+				s.DB.Model(&models.Post{}).
+					Where("DATE(created_at) = ?", dayLabel).
+					Count(&count)
+
+				s.DB.Model(&models.Post{}).
+					Joins("JOIN post_multi_media ON post_multi_media.post_id = posts.id").
+					Where("DATE(posts.created_at) = ?", dayLabel).
+					Distinct("posts.id").
+					Count(&countWithMedia)
+			} else {
+				count = 0
+				countWithMedia = 0
+			}
+
+			totalPosts += count
+			totalPostsWithMedia += countWithMedia
+		}
+	}
+
+	response.TotalPost = uint32(totalPosts)
+	response.TotalPostWMedia = uint32(totalPostsWithMedia)
+	return response, nil
 }

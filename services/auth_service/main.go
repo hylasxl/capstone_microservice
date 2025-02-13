@@ -3,7 +3,6 @@ package main
 import (
 	"auth_service/configs"
 	"auth_service/handlers"
-	"auth_service/models"
 	"auth_service/proto/auth_service"
 	"google.golang.org/grpc"
 	"log"
@@ -28,16 +27,6 @@ func main() {
 	auth_service.RegisterAuthServiceServer(grpcServer, &handlers.AuthService{
 		DB: DB,
 	})
-
-	err = DB.AutoMigrate(
-		&models.Permission{},
-		&models.PermissionByRole{},
-	)
-	if err != nil {
-		log.Fatalf("Failed to auto migrate: %v", err)
-	} else {
-		log.Printf("Migrated auth database successfully")
-	}
 
 	log.Println("Auth service is running on port 50051")
 	if err := grpcServer.Serve(listener); err != nil {

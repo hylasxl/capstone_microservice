@@ -3,8 +3,10 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -319,18 +321,11 @@ func (svc *UserService) CheckExistingPhone(ctx context.Context, in *user_service
 }
 
 func (svc *UserService) CheckValidUser(ctx context.Context, in *user_service.CheckValidUserRequest) (*user_service.CheckValidUserResponse, error) {
-
 	var account models.Account
-	if err := svc.DB.Where("id = ?", in.UserId).First(&account).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &user_service.CheckValidUserResponse{
-				IsValid: false,
-			}, nil
-		} else {
-			return &user_service.CheckValidUserResponse{
-				IsValid: false,
-			}, nil
-		}
+	if err := svc.DB.Where("id = ? AND is_banned = ? AND is_self_deleted = ?", in.UserId, false, false).First(&account).Error; err != nil {
+		return &user_service.CheckValidUserResponse{
+			IsValid: false,
+		}, nil
 	}
 	return &user_service.CheckValidUserResponse{
 		IsValid: true,
@@ -762,4 +757,316 @@ func (svc *UserService) ChangePassword(ctx context.Context, in *user_service.Cha
 		Success: true,
 	}, nil
 
+}
+
+func (svc *UserService) CustomDeleteAccount(ctx context.Context, in *user_service.CustomDeleteAccountRequest) (*user_service.CustomDeleteAccountResponse, error) {
+	if in.AccountID <= 0 {
+		return nil, errors.New("invalid account id")
+	}
+
+	var existingAccount models.Account
+	if err := svc.DB.Where("id = ?", in.AccountID).First(&existingAccount).Error; err != nil {
+		return nil, errors.New("invalid account id")
+	}
+
+	switch in.Method {
+	case "admin":
+		{
+			if err := svc.DB.Model(&models.Account{}).Where("id = ?", existingAccount.ID).Update("is_banned", true).Error; err != nil {
+				return nil, errors.New("failed to ban account")
+			}
+			break
+		}
+	case "self":
+		{
+			if err := svc.DB.Model(&models.Account{}).Where("id = ?", existingAccount.ID).Update("is_self_deleted", true).Error; err != nil {
+				return nil, errors.New("failed to ban account")
+			}
+			break
+		}
+	default:
+		return nil, errors.New("invalid method")
+	}
+
+	return &user_service.CustomDeleteAccountResponse{Success: true}, nil
+}
+
+func (svc *UserService) SearchAccount(ctx context.Context, in *user_service.SearchAccountRequest) (*user_service.SearchAccountResponse, error) {
+	if in.Page < 1 {
+		in.Page = 1
+	}
+	if in.PageSize < 1 {
+		in.PageSize = 10
+	}
+
+	// Temporary struct for GORM
+	type AccountDisplayInfo struct {
+		AccountID uint64 `json:"account_id" gorm:"column:account_id"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		AvatarURL string `json:"avatar_url"`
+	}
+
+	query := svc.DB.Model(&models.Account{}).
+		Select(`
+			accounts.id AS account_id, 
+			account_infos.first_name, 
+			account_infos.last_name, 
+			account_avatars.avatar_url
+		`).
+		Joins("LEFT JOIN account_infos ON accounts.id = account_infos.account_id").
+		Joins("LEFT JOIN account_avatars ON accounts.id = account_avatars.account_id AND account_avatars.is_in_used = true").
+		Where("accounts.is_banned = ? AND accounts.is_self_deleted = ?", false, false)
+
+	in.BlockedList = append(in.BlockedList, in.RequestAccountID)
+
+	if len(in.BlockList) > 0 {
+		query = query.Where("accounts.id NOT IN (?)", gorm.Expr("?", in.BlockList))
+	}
+	if len(in.BlockedList) > 0 {
+		query = query.Where("accounts.id NOT IN (?)", gorm.Expr("?", in.BlockedList))
+	}
+
+	if in.QueryString != "" {
+		searchTerm := "%" + in.QueryString + "%"
+		query = query.Where("accounts.username LIKE ? OR account_infos.first_name LIKE ? OR account_infos.last_name LIKE ?", searchTerm, searchTerm, searchTerm)
+	}
+
+	offset := (int(in.Page) - 1) * int(in.PageSize)
+	query = query.Limit(int(in.PageSize)).Offset(offset)
+
+	var rawAccounts []AccountDisplayInfo
+	err := query.Scan(&rawAccounts).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(rawAccounts) == 0 {
+		log.Println("No accounts found")
+	}
+
+	// Convert to Protobuf struct
+	var accounts []*user_service.SingleDisplayInfo
+	for _, acc := range rawAccounts {
+		accounts = append(accounts, &user_service.SingleDisplayInfo{
+			AccountID:   acc.AccountID,
+			DisplayName: acc.FirstName + " " + acc.LastName,
+			AvatarURL:   acc.AvatarURL,
+		})
+	}
+
+	return &user_service.SearchAccountResponse{
+		Account:  accounts,
+		Page:     in.Page,
+		PageSize: in.PageSize,
+	}, nil
+}
+
+func (svc *UserService) GetNewRegisterationData(ctx context.Context, in *user_service.GetNewRegisterationDataRequest) (*user_service.GetNewRegisterationDataResponse, error) {
+	response := &user_service.GetNewRegisterationDataResponse{
+		RequestAccountID: in.RequestAccountID,
+		PeriodLabel:      in.PeriodLabel,
+	}
+
+	var data []*user_service.DataTerms
+	var totalUsers int64
+
+	currentYear, currentMonth, currentDay := time.Now().Date()
+
+	if in.PeriodLabel == "year" {
+		// Get the requested year
+		requestedYear := int(in.PeriodData)
+
+		for i := 1; i <= 12; i++ {
+			monthLabel := fmt.Sprintf("%d-%02d", requestedYear, i) // YYYY-MM
+			var count int64
+
+			if requestedYear < currentYear || (requestedYear == currentYear && i <= int(currentMonth)) {
+				svc.DB.Model(&models.Account{}).
+					Where("YEAR(created_at) = ? AND MONTH(created_at) = ? AND account_role_id = ?", requestedYear, i, 1).
+					Count(&count)
+				totalUsers += count
+			} else {
+				count = 0
+			}
+
+			data = append(data, &user_service.DataTerms{
+				Label: monthLabel,
+				Count: uint64(count),
+			})
+		}
+
+	} else if in.PeriodLabel == "month" {
+		// Get the requested year & month
+		requestedYear := int(in.PeriodData / 100)  // Extract year (e.g., 202402 → 2024)
+		requestedMonth := int(in.PeriodData % 100) // Extract month (e.g., 202402 → 2)
+
+		// Get the last day of the requested month
+		firstDay := time.Date(requestedYear, time.Month(requestedMonth), 1, 0, 0, 0, 0, time.UTC)
+		lastDay := firstDay.AddDate(0, 1, -1).Day() // Get last day of the month
+
+		for i := 1; i <= lastDay; i++ {
+			dayLabel := fmt.Sprintf("%d-%02d-%02d", requestedYear, requestedMonth, i) // YYYY-MM-DD
+			var count int64
+
+			// Only fetch data for past and current days
+			if requestedYear < currentYear ||
+				(requestedYear == currentYear && requestedMonth < int(currentMonth)) ||
+				(requestedYear == currentYear && requestedMonth == int(currentMonth) && i <= currentDay) {
+				svc.DB.Model(&models.Account{}).
+					Where("DATE(created_at) = ? AND account_role_id = ?", dayLabel, 1).
+					Count(&count)
+				totalUsers += count
+			} else {
+				count = 0 // Future days return 0
+			}
+
+			data = append(data, &user_service.DataTerms{
+				Label: dayLabel,
+				Count: uint64(count),
+			})
+		}
+	}
+
+	response.TotalUsers = uint64(totalUsers)
+	response.Data = data
+	return response, nil
+}
+
+func (svc *UserService) CountUserType(ctx context.Context, in *user_service.CountTypeUserRequest) (*user_service.CountTypeUserResponse, error) {
+
+	response := &user_service.CountTypeUserResponse{
+		RequestAccountID: in.RequestAccountID,
+	}
+
+	var totalUsers int64
+	if err := svc.DB.Unscoped().Model(&models.Account{}).Count(&totalUsers).Error; err != nil {
+		return nil, err
+	}
+
+	// Count banned users (including soft-deleted)
+	var bannedUsers int64
+	if err := svc.DB.Unscoped().Model(&models.Account{}).Where("is_banned = ?", true).Count(&bannedUsers).Error; err != nil {
+		return nil, err
+	}
+
+	// Count deleted users (soft-deleted or self-deleted)
+	var deletedUsers int64
+	if err := svc.DB.Unscoped().Model(&models.Account{}).
+		Where("deleted_at IS NOT NULL OR is_self_deleted = ?", true).
+		Count(&deletedUsers).Error; err != nil {
+		return nil, err
+	}
+
+	// Assign values to the response
+	response.TotalUsers = uint64(totalUsers)
+	response.BannedUsers = uint64(bannedUsers)
+	response.DeletedUsers = uint64(deletedUsers)
+
+	return response, nil
+}
+
+func (svc *UserService) GetAccountList(ctx context.Context, in *user_service.GetAccountListRequest) (*user_service.GetAccountListResponse, error) {
+	var accounts []models.Account
+
+	result := svc.DB.Model(&models.Account{}).Order("created_at DESC").
+		Limit(int(in.PageSize)).
+		Offset(int((in.Page - 1) * in.PageSize)).
+		Find(&accounts)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	accountList := make([]*user_service.AccountRawInfo, len(accounts))
+	for i, acc := range accounts {
+		accountList[i] = &user_service.AccountRawInfo{
+			AccountID:     uint32(acc.ID),
+			Username:      acc.Username,
+			IsBanned:      acc.IsBanned,
+			Method:        acc.AccountCreatedByMethod,
+			IsSelfDeleted: acc.IsSelfDeleted,
+		}
+	}
+
+	// Return paginated response
+	return &user_service.GetAccountListResponse{
+		Accounts: accountList,
+		Page:     in.Page,
+		PageSize: in.PageSize,
+	}, nil
+}
+
+func (svc *UserService) SearchAccountList(ctx context.Context, in *user_service.SearchAccountListRequest) (*user_service.SearchAccountListResponse, error) {
+	var accounts []models.Account
+	query := svc.DB
+
+	if in.QueryString != "" {
+		query = query.Where("username LIKE ?", "%"+in.QueryString+"%")
+	}
+
+	// Pagination
+	offset := (in.Page - 1) * in.PageSize
+	query = query.Limit(int(in.PageSize)).Offset(int(offset))
+
+	// Execute query
+	if err := query.Order("created_at DESC").Find(&accounts).Error; err != nil {
+		return nil, err
+	}
+
+	// Convert database models to response format
+	var accountList []*user_service.AccountRawInfo
+	for _, account := range accounts {
+		accountList = append(accountList, &user_service.AccountRawInfo{
+			AccountID: uint32(account.ID),
+			Username:  account.Username,
+			Method:    account.AccountCreatedByMethod,
+			IsBanned:  account.IsBanned,
+		})
+	}
+
+	// Build response
+	response := &user_service.SearchAccountListResponse{
+		Accounts: accountList,
+		Page:     in.Page,
+		PageSize: in.PageSize,
+	}
+
+	return response, nil
+}
+
+func (svc *UserService) ResolveBan(ctx context.Context, in *user_service.ResolveBanRequest) (*user_service.ResolveBanResponse, error) {
+	// Find the account
+	var account models.Account
+	if err := svc.DB.First(&account, in.AccountID).Error; err != nil {
+		return &user_service.ResolveBanResponse{Success: false}, err
+	}
+
+	switch in.Action {
+	case "ban":
+		account.IsBanned = true
+	case "activate":
+		account.IsBanned = false
+	default:
+		return &user_service.ResolveBanResponse{Success: false}, errors.New("invalid action")
+	}
+
+	// Update account status
+	if err := svc.DB.Save(&account).Error; err != nil {
+		return &user_service.ResolveBanResponse{Success: false}, err
+	}
+
+	// Return success response
+	return &user_service.ResolveBanResponse{Success: true}, nil
+}
+
+func (svc *UserService) GetUsername(ctx context.Context, in *user_service.GetUsernameRequest) (*user_service.GetUsernameResponse, error) {
+	var account models.Account
+	if err := svc.DB.First(&account, in.AccountID).Error; err != nil {
+		return nil, err
+	}
+
+	return &user_service.GetUsernameResponse{
+		Username: account.Username,
+	}, nil
 }

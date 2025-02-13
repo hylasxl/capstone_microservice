@@ -9,8 +9,8 @@ service PostService {
   rpc UploadPostImage (UploadImageRequest) returns (UploadImageResponse);
   rpc SharePost (SharePostRequest) returns (SharePostResponse);
   rpc CommentPost (CommentPostRequest) returns (CommentPostResponse);
-  rpc GetSinglePost (GetSinglePostRequest) returns (GetSinglePostResponse); //NOT IMPLEMENTED
-  rpc EditPost (EditPostRequest) returns (EditPostResponse); // NOT IMPLEMENTED
+  rpc GetSinglePost (GetSinglePostRequest) returns (GetSinglePostResponse);
+  rpc EditPost (EditPostRequest) returns (EditPostResponse);
   rpc DeletePost (DeletePostRequest) returns (DeletePostResponse);
   rpc ReplyComment (ReplyCommentRequest) returns (ReplyCommentResponse);
   rpc EditComment (EditCommentRequest) returns (EditCommentResponse);
@@ -32,6 +32,10 @@ service PostService {
   rpc GetPostMediaComment(GetPostMediaCommentRequest) returns (GetPostMediaCommentResponse);
   rpc GetWallPostList (GetWallPostListRequest) returns (GetWallPostListResponse);
   rpc GetNewFeeds (GetNewFeedsRequest) returns (GetNewFeedsResponse);
+  rpc DeletePostByAdmin (AdminDeletePostRequest) returns (AdminDeletePostResponse);
+  rpc GetNewPostStatisticData (GetNewPostStatisticDataRequest) returns (GetNewPostStatisticDataResponse);
+  rpc GetMediaStatistic (GetMediaStatisticRequest) returns (GetMediaStatisticResponse);
+  rpc GetPostWMediaStatistic (GetPostWMediaStatisticRequest) returns (GetPostWMediaStatisticResponse);
 }
 
 message CreatePostRequest {
@@ -428,4 +432,48 @@ message GetNewFeedsResponse {
 message InteractionScore {
   uint64 AccountID = 1;
   uint64 Score = 2;
+}
+
+message AdminDeletePostRequest {
+  uint32 PostID = 1;
+  uint32 DeleteType = 2;
+}
+
+message AdminDeletePostResponse {
+  bool Success = 1;
+}
+
+message GetNewPostStatisticDataRequest {
+  string PeriodLabel = 2;
+  uint32 PeriodData = 3;
+}
+
+message GetNewPostStatisticDataResponse {
+  uint64 TotalPosts = 1;
+  repeated DataTerms Data = 2;
+}
+
+message DataTerms {
+  string Label = 1;
+  uint64 Count = 2;
+}
+
+message GetMediaStatisticRequest {
+  string PeriodLabel = 2;
+  uint32 PeriodData = 3;
+}
+
+message GetMediaStatisticResponse {
+  uint64 TotalMedias = 1;
+  repeated DataTerms Data = 2;
+}
+
+message GetPostWMediaStatisticRequest {
+  string PeriodLabel = 1;
+  uint32 PeriodData = 2;
+}
+
+message GetPostWMediaStatisticResponse {
+  uint32 TotalPost = 1;
+  uint32 TotalPostWMedia = 2;
 }

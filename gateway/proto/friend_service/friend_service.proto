@@ -19,6 +19,8 @@ service FriendService {
   rpc CheckIsFollow (CheckIsFollowRequest) returns (CheckIsFollowResponse);
   rpc GetUserInteraction (GetUserInteractionRequest) returns (GetUserInteractionResponse);
   rpc CheckExistingRequest (CheckExistingRequestRequest) returns (CheckExistingRequestResponse);
+  rpc GetBlockList (GetBlockListRequest) returns (BlockListResponse);
+  rpc GetBlockedList (GetBlockedListRequest) returns (BlockListResponse);
 }
 
 message SendFriendRequest {
@@ -171,4 +173,16 @@ message CheckExistingRequestRequest {
 message CheckExistingRequestResponse {
   bool IsExisting = 1;
   uint64 RequestID = 2;
+}
+
+message GetBlockListRequest {
+  uint32 AccountID = 1;
+}
+
+message GetBlockedListRequest {
+  uint32 AccountID = 2;
+}
+
+message BlockListResponse {
+  repeated uint32 IDs = 1;
 }

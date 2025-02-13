@@ -22,9 +22,50 @@ services:
 #    networks:
 #      - network
 
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_LOG_FILTERS=rendering:debug
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - network
+    depends_on:
+      - renderer
+
+  renderer:
+    image: grafana/grafana-image-renderer
+    container_name: grafana_renderer
+    ports:
+      - "8081:8081"
+    environment:
+      - ENABLE_METRICS=true
+      - IGNORE_HTTPS_ERRORS=true
+    networks:
+      - network
+
   gateway:
     build:
       context: ./gateway
+    volumes:
+      - ./logging:/app/logging
     ports:
       - "8080:8080"
     depends_on:
@@ -428,7 +469,7 @@ services:
     build:
       context: ./services/post_service
     ports:
-      - "51000:51000"
+      - "50100:50100"
     networks:
       - network
     environment:
@@ -469,7 +510,7 @@ services:
     build:
       context: ./services/privacy_service
     ports:
-      - "52000:52000"
+      - "50900:50900"
     networks:
       - network
     environment:
@@ -517,6 +558,9 @@ volumes:
   post_db_data:
   privacy_db_data:
   notification_db_data:
+  grafana-data:
+    driver: local
+
 
 
 networks:

@@ -811,23 +811,36 @@ func (svc *FriendService) CheckIsBlock(ctx context.Context, in *friend_service.C
 }
 
 func (svc *FriendService) CheckIsFollow(ctx context.Context, in *friend_service.CheckIsFollowRequest) (*friend_service.CheckIsFollowResponse, error) {
-	if in.FromAccountID == 0 || in.ToAccountID == 0 {
+	// Validate input IDs
+	if in.FromAccountID <= 0 || in.ToAccountID <= 0 {
 		return &friend_service.CheckIsFollowResponse{
 			Error: "Invalid account IDs",
 		}, errors.New("invalid account IDs")
 	}
 
-	var friendFollow models.FriendFollow
-	if err := svc.DB.Model(models.FriendFollow{}).Where("first_account_id = ? AND second_account_id = ?", in.FromAccountID, in.ToAccountID).Error; err != nil {
+	fmt.Printf("Checking if account %d follows account %d\n", in.FromAccountID, in.ToAccountID)
+
+	// Check if a follow relationship exists
+	var exists bool
+	err := svc.DB.Model(&models.FriendFollow{}).
+		Select("COUNT(*) > 0").
+		Where("first_account_id = ? AND second_account_id = ? AND is_followed = ?", in.FromAccountID, in.ToAccountID, true).
+		Find(&exists).Error
+
+	// Handle database error
+	if err != nil {
+		fmt.Printf("Database error: %v\n", err)
 		return &friend_service.CheckIsFollowResponse{
 			IsFollow: false,
-		}, nil
+		}, err
 	}
 
+	// Return the follow status
 	return &friend_service.CheckIsFollowResponse{
-		IsFollow: friendFollow.IsFollowed,
+		IsFollow: exists,
 	}, nil
 }
+
 func (svc *FriendService) GetUserInteraction(ctx context.Context, in *friend_service.GetUserInteractionRequest) (*friend_service.GetUserInteractionResponse, error) {
 	var interactions []*friend_service.InteractionScore
 
@@ -936,4 +949,38 @@ func (svc *FriendService) CheckExistingRequest(ctx context.Context, in *friend_s
 		IsExisting: true,
 		RequestID:  uint64(request.ID),
 	}, nil
+}
+
+func (svc *FriendService) GetBlockList(ctx context.Context, in *friend_service.GetBlockListRequest) (*friend_service.BlockListResponse, error) {
+	if in.AccountID == 0 {
+		return nil, errors.New("invalid AccountID")
+	}
+
+	var blockedIDs []uint32
+	err := svc.DB.Model(&models.FriendBlock{}).
+		Where("first_account_id = ? AND is_blocked = ?", in.AccountID, true).
+		Pluck("second_account_id", &blockedIDs).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &friend_service.BlockListResponse{IDs: blockedIDs}, nil
+}
+
+func (svc *FriendService) GetBlockedList(ctx context.Context, in *friend_service.GetBlockedListRequest) (*friend_service.BlockListResponse, error) {
+	if in.AccountID == 0 {
+		return nil, errors.New("invalid AccountID")
+	}
+
+	var blockedByIDs []uint32
+	err := svc.DB.Model(&models.FriendBlock{}).
+		Where("second_account_id = ? AND is_blocked = ?", in.AccountID, true).
+		Pluck("first_account_id", &blockedByIDs).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &friend_service.BlockListResponse{IDs: blockedByIDs}, nil
 }

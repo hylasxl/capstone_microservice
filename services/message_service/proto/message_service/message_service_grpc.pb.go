@@ -19,9 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MessageService_GetChatHistory_FullMethodName = "/message.MessageService/GetChatHistory"
-	MessageService_ChatStream_FullMethodName     = "/message.MessageService/ChatStream"
-	MessageService_GetChatList_FullMethodName    = "/message.MessageService/GetChatList"
+	MessageService_GetChatHistory_FullMethodName            = "/message.MessageService/GetChatHistory"
+	MessageService_ChatStream_FullMethodName                = "/message.MessageService/ChatStream"
+	MessageService_GetChatList_FullMethodName               = "/message.MessageService/GetChatList"
+	MessageService_GetMessages_FullMethodName               = "/message.MessageService/GetMessages"
+	MessageService_ActionMessage_FullMethodName             = "/message.MessageService/ActionMessage"
+	MessageService_ReceiverMarkMessageAsRead_FullMethodName = "/message.MessageService/ReceiverMarkMessageAsRead"
 )
 
 // MessageServiceClient is the client API for MessageService service.
@@ -31,6 +34,9 @@ type MessageServiceClient interface {
 	GetChatHistory(ctx context.Context, in *ChatHistoryRequest, opts ...grpc.CallOption) (*ChatHistoryResponse, error)
 	ChatStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ChatMessage, ChatMessageReturn], error)
 	GetChatList(ctx context.Context, in *GetChatListRequest, opts ...grpc.CallOption) (*GetChatListResponse, error)
+	GetMessages(ctx context.Context, in *GetMessageRequest, opts ...grpc.CallOption) (*GetMessageResponse, error)
+	ActionMessage(ctx context.Context, in *ActionMessageRequest, opts ...grpc.CallOption) (*ActionMessageResponse, error)
+	ReceiverMarkMessageAsRead(ctx context.Context, in *ReceiverMarkMessageAsReadRequest, opts ...grpc.CallOption) (*ReceiverMarkMessageAsReadResponse, error)
 }
 
 type messageServiceClient struct {
@@ -74,6 +80,36 @@ func (c *messageServiceClient) GetChatList(ctx context.Context, in *GetChatListR
 	return out, nil
 }
 
+func (c *messageServiceClient) GetMessages(ctx context.Context, in *GetMessageRequest, opts ...grpc.CallOption) (*GetMessageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMessageResponse)
+	err := c.cc.Invoke(ctx, MessageService_GetMessages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messageServiceClient) ActionMessage(ctx context.Context, in *ActionMessageRequest, opts ...grpc.CallOption) (*ActionMessageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ActionMessageResponse)
+	err := c.cc.Invoke(ctx, MessageService_ActionMessage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messageServiceClient) ReceiverMarkMessageAsRead(ctx context.Context, in *ReceiverMarkMessageAsReadRequest, opts ...grpc.CallOption) (*ReceiverMarkMessageAsReadResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReceiverMarkMessageAsReadResponse)
+	err := c.cc.Invoke(ctx, MessageService_ReceiverMarkMessageAsRead_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MessageServiceServer is the server API for MessageService service.
 // All implementations must embed UnimplementedMessageServiceServer
 // for forward compatibility.
@@ -81,6 +117,9 @@ type MessageServiceServer interface {
 	GetChatHistory(context.Context, *ChatHistoryRequest) (*ChatHistoryResponse, error)
 	ChatStream(grpc.BidiStreamingServer[ChatMessage, ChatMessageReturn]) error
 	GetChatList(context.Context, *GetChatListRequest) (*GetChatListResponse, error)
+	GetMessages(context.Context, *GetMessageRequest) (*GetMessageResponse, error)
+	ActionMessage(context.Context, *ActionMessageRequest) (*ActionMessageResponse, error)
+	ReceiverMarkMessageAsRead(context.Context, *ReceiverMarkMessageAsReadRequest) (*ReceiverMarkMessageAsReadResponse, error)
 	mustEmbedUnimplementedMessageServiceServer()
 }
 
@@ -99,6 +138,15 @@ func (UnimplementedMessageServiceServer) ChatStream(grpc.BidiStreamingServer[Cha
 }
 func (UnimplementedMessageServiceServer) GetChatList(context.Context, *GetChatListRequest) (*GetChatListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetChatList not implemented")
+}
+func (UnimplementedMessageServiceServer) GetMessages(context.Context, *GetMessageRequest) (*GetMessageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMessages not implemented")
+}
+func (UnimplementedMessageServiceServer) ActionMessage(context.Context, *ActionMessageRequest) (*ActionMessageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ActionMessage not implemented")
+}
+func (UnimplementedMessageServiceServer) ReceiverMarkMessageAsRead(context.Context, *ReceiverMarkMessageAsReadRequest) (*ReceiverMarkMessageAsReadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReceiverMarkMessageAsRead not implemented")
 }
 func (UnimplementedMessageServiceServer) mustEmbedUnimplementedMessageServiceServer() {}
 func (UnimplementedMessageServiceServer) testEmbeddedByValue()                        {}
@@ -164,6 +212,60 @@ func _MessageService_GetChatList_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MessageService_GetMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMessageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).GetMessages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_GetMessages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).GetMessages(ctx, req.(*GetMessageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MessageService_ActionMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActionMessageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).ActionMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_ActionMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).ActionMessage(ctx, req.(*ActionMessageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MessageService_ReceiverMarkMessageAsRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReceiverMarkMessageAsReadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).ReceiverMarkMessageAsRead(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_ReceiverMarkMessageAsRead_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).ReceiverMarkMessageAsRead(ctx, req.(*ReceiverMarkMessageAsReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MessageService_ServiceDesc is the grpc.ServiceDesc for MessageService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -178,6 +280,18 @@ var MessageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetChatList",
 			Handler:    _MessageService_GetChatList_Handler,
+		},
+		{
+			MethodName: "GetMessages",
+			Handler:    _MessageService_GetMessages_Handler,
+		},
+		{
+			MethodName: "ActionMessage",
+			Handler:    _MessageService_ActionMessage_Handler,
+		},
+		{
+			MethodName: "ReceiverMarkMessageAsRead",
+			Handler:    _MessageService_ReceiverMarkMessageAsRead_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

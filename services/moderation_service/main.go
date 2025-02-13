@@ -5,7 +5,6 @@ import (
 	"log"
 	"moderation_service/configs"
 	"moderation_service/handlers"
-	"moderation_service/models"
 	"moderation_service/proto/moderation_service"
 	"net"
 )
@@ -17,15 +16,6 @@ func main() {
 	}
 
 	db := configs.InitMySQL()
-	err = db.AutoMigrate(
-		&models.ReportedPort{},
-		&models.ReportedUser{},
-		&models.BanWord{},
-	)
-
-	if err != nil {
-		log.Fatalf("failed to auto migrate moderation: %v", err)
-	}
 
 	grpcServer := grpc.NewServer()
 	moderation_service.RegisterModerationServiceServer(grpcServer, &handlers.ModerationService{
