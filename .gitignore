@@ -17,3 +17,5 @@
 
 # Vendor dependencies (if not using Go modules)
 vendor/
+
+services/notification_service/syncio-7a920-firebase-adminsdk-3esie-1b79ddb11e.json
