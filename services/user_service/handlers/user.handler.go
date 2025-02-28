@@ -821,10 +821,10 @@ func (svc *UserService) SearchAccount(ctx context.Context, in *user_service.Sear
 	in.BlockedList = append(in.BlockedList, in.RequestAccountID)
 
 	if len(in.BlockList) > 0 {
-		query = query.Where("accounts.id NOT IN (?)", gorm.Expr("?", in.BlockList))
+		query = query.Where("accounts.id NOT IN (?)", in.BlockList)
 	}
 	if len(in.BlockedList) > 0 {
-		query = query.Where("accounts.id NOT IN (?)", gorm.Expr("?", in.BlockedList))
+		query = query.Where("accounts.id NOT IN (?)", in.BlockedList)
 	}
 
 	if in.QueryString != "" {

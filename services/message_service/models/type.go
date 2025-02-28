@@ -7,16 +7,17 @@ type GetChatListRequest struct {
 }
 
 type ChatList struct {
-	ChatID                string `json:"chat_id"`
-	AccountID             uint64 `json:"account_id"`
-	TargetAccountID       uint64 `json:"target_account_id"`
-	DisplayName           string `json:"display_name"`
-	AvatarURL             string `json:"avatar_url"`
-	LastMessageTimestamp  int64  `json:"last_message_timestamp"`
-	LastMessageContent    string `json:"last_message_content"`
-	UnreadMessageQuantity uint64 `json:"unread_message_quantity"`
-	Page                  uint32 `json:"page"`
-	PageSize              uint32 `json:"page_size"`
+	ChatID                string   `json:"chat_id"`
+	AccountID             uint64   `json:"account_id"`
+	TargetAccountID       uint64   `json:"target_account_id"`
+	DisplayName           string   `json:"display_name"`
+	AvatarURL             string   `json:"avatar_url"`
+	LastMessageTimestamp  int64    `json:"last_message_timestamp"`
+	LastMessageContent    string   `json:"last_message_content"`
+	UnreadMessageQuantity uint64   `json:"unread_message_quantity"`
+	Page                  uint32   `json:"page"`
+	PageSize              uint32   `json:"page_size"`
+	Participants          []uint32 `json:"participants"`
 }
 
 type GetMessageRequest struct {

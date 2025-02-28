@@ -208,3 +208,15 @@ func ReceiverMarkMessageAsRead(ctx context.Context, db *mongo.Database, req Rece
 
 	return nil
 }
+
+func DeleteMessageByChatID(ctx context.Context, db *mongo.Database, chatID string) error {
+	collection := db.Collection(Message{}.CollectionName())
+	chatPrimitiveID, err := primitive.ObjectIDFromHex(chatID)
+	_, err = collection.DeleteMany(ctx, bson.M{
+		"chat_id": chatPrimitiveID,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}

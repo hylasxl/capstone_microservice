@@ -21,6 +21,8 @@ service FriendService {
   rpc CheckExistingRequest (CheckExistingRequestRequest) returns (CheckExistingRequestResponse);
   rpc GetBlockList (GetBlockListRequest) returns (BlockListResponse);
   rpc GetBlockedList (GetBlockedListRequest) returns (BlockListResponse);
+  rpc GetBlockListByAccount (GetBlockListByAccountRequest) returns (GetBlockListByAccountResponse);
+  rpc GetBlockAndBlockedByAccount (GetBlockAndBlockedByAccountRequest) returns (GetBlockAndBlockedByAccountResponse);
 }
 
 message SendFriendRequest {
@@ -185,4 +187,22 @@ message GetBlockedListRequest {
 
 message BlockListResponse {
   repeated uint32 IDs = 1;
+}
+
+message GetBlockListByAccountRequest {
+  uint32 AccountID = 1;
+}
+
+message GetBlockListByAccountResponse {
+  repeated uint32 AccountIDs = 1;
+  bool Success = 2;
+}
+
+message GetBlockAndBlockedByAccountRequest {
+  uint32 AccountID = 1;
+}
+
+message GetBlockAndBlockedByAccountResponse {
+  repeated uint32 AccountIDs = 1;
+  bool Success = 2;
 }

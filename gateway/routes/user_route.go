@@ -8,9 +8,9 @@ import (
 func InitializeUserRoutes(router *mux.Router, clients *ServiceClients) {
 	userRoutes := router.PathPrefix("/api/v1/users").Subrouter()
 
-	userRoutes.HandleFunc("/get-infos", handlers.HandlerGetAccountInfo(clients.UserService)).Methods("GET")
-	userRoutes.HandleFunc("/get-profile-info", handlers.HandlerGetProfileInfo(clients.UserService, clients.FriendService, clients.PrivacyService)).Methods("GET")
-	userRoutes.HandleFunc("/search-account", handlers.HandlerSearchAccounts(clients.UserService, clients.FriendService)).Methods("GET")
+	userRoutes.HandleFunc("/get-infos", handlers.HandlerGetAccountInfo(clients.UserService)).Methods("POST")
+	userRoutes.HandleFunc("/get-profile-info", handlers.HandlerGetProfileInfo(clients.UserService, clients.FriendService, clients.PrivacyService)).Methods("POST")
+	userRoutes.HandleFunc("/search-account", handlers.HandlerSearchAccounts(clients.UserService, clients.FriendService)).Methods("POST")
 	userRoutes.HandleFunc("/get-new-registeration-data", handlers.HandlerGetNewRegisterationData(clients.UserService)).Methods("POST")
 	userRoutes.HandleFunc("/count-user-type", handlers.HandlerGetUserType(clients.UserService)).Methods("POST")
 	userRoutes.HandleFunc("/get-account-list", handlers.HandlerGetAccountList(clients.UserService)).Methods("POST")

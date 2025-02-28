@@ -15,7 +15,7 @@ import (
 // Chat represents a conversation between users
 type Chat struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty"`
-	Participants  []uint             `bson:"participants"` // List of user IDs in the chat
+	Participants  []uint32           `bson:"participants"` // List of user IDs in the chat
 	LastMessage   string             `bson:"last_message"` // Last message content (optional)
 	LastMessageAt time.Time          `bson:"last_message_at"`
 	CreatedAt     time.Time          `bson:"created_at"`
@@ -31,7 +31,6 @@ func (Chat) CollectionName() string {
 func CreateChat(ctx context.Context, db *mongo.Database, chat *Chat) (*mongo.InsertOneResult, error) {
 	collection := db.Collection(chat.CollectionName())
 
-	// Check if chat already exists
 	existingChat := Chat{}
 	err := collection.FindOne(ctx, bson.M{"participants": bson.M{"$all": chat.Participants}}).Decode(&existingChat)
 	if err == nil {
@@ -39,13 +38,14 @@ func CreateChat(ctx context.Context, db *mongo.Database, chat *Chat) (*mongo.Ins
 	}
 
 	chat.ID = primitive.NewObjectID()
+	chat.LastMessage = ""
+	chat.LastMessageAt = time.Now()
 	chat.CreatedAt = time.Now()
 	chat.UpdatedAt = time.Now()
 
 	return collection.InsertOne(ctx, chat)
 }
 
-// FindChatByID retrieves a chat by its ID
 func FindChatByID(ctx context.Context, db *mongo.Database, id primitive.ObjectID) (*Chat, error) {
 	var chat Chat
 	collection := db.Collection(chat.CollectionName())
@@ -85,6 +85,19 @@ func FindChatsByUser(ctx context.Context, db *mongo.Database, userID uint) ([]Ch
 	}
 
 	return chats, nil
+}
+
+func DeleteChatByID(ctx context.Context, db *mongo.Database, id string) error {
+	chatId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	collection := db.Collection(Chat{}.CollectionName())
+	_, err = collection.DeleteOne(ctx, bson.M{"_id": chatId})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdateChat updates a chat (e.g., updating the last message)
@@ -153,8 +166,7 @@ func GetChatList(ctx context.Context, db *mongo.Database, req GetChatListRequest
 		// Fetch last message details
 		var lastMessage Message
 		msgCollection := db.Collection(Message{}.CollectionName())
-		err := msgCollection.FindOne(ctx, bson.M{"chat_id": chat.ID}, options.FindOne().SetSort(bson.M{"timestamp": -1})).
-			Decode(&lastMessage)
+		err := msgCollection.FindOne(ctx, bson.M{"chat_id": chat.ID}, options.FindOne().SetSort(bson.M{"timestamp": -1})).Decode(&lastMessage)
 		if err != nil && err != mongo.ErrNoDocuments {
 			return nil, err
 		}
@@ -181,6 +193,7 @@ func GetChatList(ctx context.Context, db *mongo.Database, req GetChatListRequest
 			UnreadMessageQuantity: uint64(unreadCount),
 			Page:                  req.Page,
 			PageSize:              req.PageSize,
+			Participants:          chat.Participants, // Add participants list
 		})
 	}
 

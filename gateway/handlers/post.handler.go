@@ -22,63 +22,63 @@ import (
 
 func HandlerCreatePost(postClient post_service.PostServiceClient, userClient user_service.UserServiceClient, moderationClient moderation_service.ModerationServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("DEBUG: Received request to create a post")
+
+		// Parse the multipart form with a size limit
 		err := r.ParseMultipartForm(256 * 1024 * 1024)
 		if err != nil {
+			log.Println("ERROR: Failed to parse multipart form:", err)
 			http.Error(w, "Failed to parse multipart form", http.StatusBadRequest)
 			return
 		}
 
 		content := r.FormValue("content")
-
 		privacyStatus := r.FormValue("privacy_status")
 		isPublishedLater := r.FormValue("is_published_later") == "true"
 
+		log.Println("DEBUG: Parsed form values -> content:", content, "privacy_status:", privacyStatus, "is_published_later:", isPublishedLater)
+
+		// Handle optional timestamp parsing
+		var timestampInt int64
 		timestamp := r.FormValue("published_later_timestamp")
-		timestampInt, err := strconv.ParseInt(timestamp, 10, 64)
-		if err != nil {
-			respondWithError(w, http.StatusBadRequest, "Invalid timestamp", err)
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		imageCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-
-		var mediaMessages []*MultiMediaMessage
-		fmt.Println("Received files:", len(r.MultipartForm.File["medias"]))
-		for _, fileHeader := range r.MultipartForm.File["medias"] {
-			file, err := fileHeader.Open()
-			if err != nil {
-				http.Error(w, "Failed to open file", http.StatusInternalServerError)
+		if isPublishedLater {
+			if timestamp == "" {
+				log.Println("ERROR: Missing timestamp for scheduled post")
+				respondWithError(w, http.StatusBadRequest, "Missing timestamp for scheduled post", nil)
 				return
 			}
-			defer file.Close()
-
-			fileContent, err := io.ReadAll(file)
+			timestampInt, err = strconv.ParseInt(timestamp, 10, 64)
 			if err != nil {
-				http.Error(w, "Failed to read file content", http.StatusInternalServerError)
+				log.Println("ERROR: Invalid timestamp:", timestamp, "Error:", err)
+				respondWithError(w, http.StatusBadRequest, "Invalid timestamp", err)
 				return
 			}
-
-			mediaMessages = append(mediaMessages, &MultiMediaMessage{
-				Type:         fileHeader.Header.Get("Content-Type"),
-				UploadStatus: "uploaded",
-				Content:      fileHeader.Filename,
-				Media:        fileContent,
-			})
 		}
+		log.Println("DEBUG: Parsed timestamp:", timestampInt)
 
+		// Parse account ID
 		accountID := r.FormValue("account_id")
 		accID, err := strconv.ParseInt(accountID, 10, 64)
-		tagAccountIDStr := r.FormValue("tag_account_ids")
-		var tagAccountIDs = make([]string, 0)
+		if err != nil {
+			log.Println("ERROR: Invalid account ID:", accountID, "Error:", err)
+			respondWithError(w, http.StatusBadRequest, "Invalid account ID", err)
+			return
+		}
+		log.Println("DEBUG: Parsed account ID:", accID)
 
+		// Parse tagged accounts
+		tagAccountIDStr := r.FormValue("tag_account_ids")
+		var tagAccountIDs []string
 		if tagAccountIDStr != "" {
 			tagAccountIDs = strings.Split(tagAccountIDStr, ",")
 		}
+		log.Println("DEBUG: Parsed tagged accounts:", tagAccountIDs)
 
+		// Context for post creation
+		postCtx, postCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer postCancel()
+
+		// Prepare the request
 		createPostRequest := &post_service.CreatePostRequest{
 			AccountID:              uint64(accID),
 			Content:                content,
@@ -88,12 +88,52 @@ func HandlerCreatePost(postClient post_service.PostServiceClient, userClient use
 			TagAccountIDs:          tagAccountIDs,
 		}
 
-		createPostResp, err := postClient.CreateNewPost(ctx, createPostRequest)
+		log.Println("DEBUG: Sending request to CreateNewPost service")
+		createPostResp, err := postClient.CreateNewPost(postCtx, createPostRequest)
 		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Cannot create post", nil)
+			log.Println("ERROR: Cannot create post:", err)
+			respondWithError(w, http.StatusInternalServerError, "Cannot create post", err)
 			return
 		}
+		log.Println("DEBUG: Post created successfully with PostID:", createPostResp.PostID)
 
+		// Context for image upload
+		imageCtx, imageCancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer imageCancel()
+
+		// Process uploaded images
+		var mediaMessages []*MultiMediaMessage
+		files := r.MultipartForm.File["medias"]
+		log.Println("DEBUG: Number of uploaded files:", len(files))
+		if len(files) > 0 {
+			for _, fileHeader := range files {
+				log.Println("DEBUG: Processing file:", fileHeader.Filename, "Size:", fileHeader.Size, "Type:", fileHeader.Header.Get("Content-Type"))
+
+				file, err := fileHeader.Open()
+				if err != nil {
+					log.Println("ERROR: Failed to open file:", fileHeader.Filename, "Error:", err)
+					respondWithError(w, http.StatusInternalServerError, "Failed to open file", err)
+					return
+				}
+				defer file.Close()
+
+				fileContent, err := io.ReadAll(file)
+				if err != nil {
+					log.Println("ERROR: Failed to read file content:", fileHeader.Filename, "Error:", err)
+					respondWithError(w, http.StatusInternalServerError, "Failed to read file content", err)
+					return
+				}
+
+				mediaMessages = append(mediaMessages, &MultiMediaMessage{
+					Type:         fileHeader.Header.Get("Content-Type"),
+					UploadStatus: "uploaded",
+					Content:      fileHeader.Filename,
+					Media:        fileContent,
+				})
+			}
+		}
+
+		// Prepare image upload request
 		var requestMM []*post_service.MultiMediaMessage
 		for _, mediaMessage := range mediaMessages {
 			requestMM = append(requestMM, &post_service.MultiMediaMessage{
@@ -104,30 +144,42 @@ func HandlerCreatePost(postClient post_service.PostServiceClient, userClient use
 			})
 		}
 
-		var mediaRequest = &post_service.UploadImageRequest{
-			PostID: createPostResp.PostID,
-			Medias: requestMM,
+		// Upload images if there are any
+		var mediaURLs []string
+		if len(requestMM) > 0 {
+			log.Println("DEBUG: Uploading", len(requestMM), "images to UploadPostImage service")
+
+			mediaRequest := &post_service.UploadImageRequest{
+				PostID: createPostResp.PostID,
+				Medias: requestMM,
+			}
+
+			mediaResp, err := postClient.UploadPostImage(imageCtx, mediaRequest)
+			if err != nil {
+				log.Println("ERROR: Cannot upload images:", err)
+				respondWithError(w, http.StatusInternalServerError, "Cannot upload image", err)
+				return
+			}
+			mediaURLs = mediaResp.MediaURLs
+			log.Println("DEBUG: Uploaded images successfully, URLs:", mediaURLs)
 		}
 
-		mediaResp, err := postClient.UploadPostImage(imageCtx, mediaRequest)
-		if err != nil {
-			println(err.Error())
-			respondWithError(w, http.StatusInternalServerError, "Cannot upload image", nil)
-			return
-		}
-
-		var response = &CreatePostResponse{
+		// Send response
+		response := &CreatePostResponse{
 			PostID:    strconv.FormatUint(createPostResp.PostID, 10),
-			MediaURLs: mediaResp.MediaURLs,
+			MediaURLs: mediaURLs,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		err = json.NewEncoder(w).Encode(response)
 		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Cannot encode response", nil)
+			log.Println("ERROR: Cannot encode response:", err)
+			respondWithError(w, http.StatusInternalServerError, "Cannot encode response", err)
 			return
 		}
+
+		log.Println("DEBUG: Post created successfully and response sent")
 	}
 }
 
@@ -1450,9 +1502,6 @@ func HandlerGetNewFeeds(postClient post_service.PostServiceClient, userClient us
 				Score:     interaction.Score,
 			}
 		}
-
-		log.Printf("User Interactions: %+v\n", userInteraction.Interactions)
-		log.Printf("List Friend IDs: %+v\n", listFriendResp.ListFriendIDs)
 
 		newFeedsResp, err := postClient.GetNewFeeds(ctx, &post_service.GetNewFeedsRequest{
 			AccountID:     request.AccountID,

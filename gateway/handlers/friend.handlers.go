@@ -653,3 +653,53 @@ func HandlerCheckIsBlock(friendClient friend_service.FriendServiceClient) http.H
 		}
 	}
 }
+
+func HandlerGetBlockListByAccount(friendClient friend_service.FriendServiceClient, userClient user_service.UserServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var in GetBlockListByAccountRequest
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			respondWithError(w, http.StatusBadRequest, "Invalid Request", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := friendClient.GetBlockListByAccount(ctx, &friend_service.GetBlockListByAccountRequest{
+			AccountID: uint32(in.AccountID),
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Get block by account error", err)
+			return
+		}
+
+		var listID []uint64
+
+		for _, item := range resp.AccountIDs {
+			listID = append(listID, uint64(item))
+		}
+
+		displayInfo, err := userClient.GetListAccountDisplayInfo(ctx, &user_service.GetListAccountDisplayInfoRequest{
+			IDs: listID,
+		})
+
+		var response = &GetBlockListByAccountResponse{
+			Success: true,
+		}
+
+		for _, item := range displayInfo.Infos {
+			response.Accounts = append(response.Accounts, SingleAccountInfo{
+				AccountID:   uint(item.AccountID),
+				DisplayName: item.DisplayName,
+				AvatarURL:   item.AvatarURL,
+			})
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err = json.NewEncoder(w).Encode(response); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Get block by account response error", err)
+		}
+	}
+}

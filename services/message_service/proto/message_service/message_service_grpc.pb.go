@@ -25,6 +25,8 @@ const (
 	MessageService_GetMessages_FullMethodName               = "/message.MessageService/GetMessages"
 	MessageService_ActionMessage_FullMethodName             = "/message.MessageService/ActionMessage"
 	MessageService_ReceiverMarkMessageAsRead_FullMethodName = "/message.MessageService/ReceiverMarkMessageAsRead"
+	MessageService_CreateChat_FullMethodName                = "/message.MessageService/CreateChat"
+	MessageService_DeleteChat_FullMethodName                = "/message.MessageService/DeleteChat"
 )
 
 // MessageServiceClient is the client API for MessageService service.
@@ -37,6 +39,8 @@ type MessageServiceClient interface {
 	GetMessages(ctx context.Context, in *GetMessageRequest, opts ...grpc.CallOption) (*GetMessageResponse, error)
 	ActionMessage(ctx context.Context, in *ActionMessageRequest, opts ...grpc.CallOption) (*ActionMessageResponse, error)
 	ReceiverMarkMessageAsRead(ctx context.Context, in *ReceiverMarkMessageAsReadRequest, opts ...grpc.CallOption) (*ReceiverMarkMessageAsReadResponse, error)
+	CreateChat(ctx context.Context, in *CreateChatRequest, opts ...grpc.CallOption) (*CreateChatResponse, error)
+	DeleteChat(ctx context.Context, in *DeleteChatRequest, opts ...grpc.CallOption) (*DeleteChatResponse, error)
 }
 
 type messageServiceClient struct {
@@ -110,6 +114,26 @@ func (c *messageServiceClient) ReceiverMarkMessageAsRead(ctx context.Context, in
 	return out, nil
 }
 
+func (c *messageServiceClient) CreateChat(ctx context.Context, in *CreateChatRequest, opts ...grpc.CallOption) (*CreateChatResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateChatResponse)
+	err := c.cc.Invoke(ctx, MessageService_CreateChat_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messageServiceClient) DeleteChat(ctx context.Context, in *DeleteChatRequest, opts ...grpc.CallOption) (*DeleteChatResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteChatResponse)
+	err := c.cc.Invoke(ctx, MessageService_DeleteChat_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MessageServiceServer is the server API for MessageService service.
 // All implementations must embed UnimplementedMessageServiceServer
 // for forward compatibility.
@@ -120,6 +144,8 @@ type MessageServiceServer interface {
 	GetMessages(context.Context, *GetMessageRequest) (*GetMessageResponse, error)
 	ActionMessage(context.Context, *ActionMessageRequest) (*ActionMessageResponse, error)
 	ReceiverMarkMessageAsRead(context.Context, *ReceiverMarkMessageAsReadRequest) (*ReceiverMarkMessageAsReadResponse, error)
+	CreateChat(context.Context, *CreateChatRequest) (*CreateChatResponse, error)
+	DeleteChat(context.Context, *DeleteChatRequest) (*DeleteChatResponse, error)
 	mustEmbedUnimplementedMessageServiceServer()
 }
 
@@ -147,6 +173,12 @@ func (UnimplementedMessageServiceServer) ActionMessage(context.Context, *ActionM
 }
 func (UnimplementedMessageServiceServer) ReceiverMarkMessageAsRead(context.Context, *ReceiverMarkMessageAsReadRequest) (*ReceiverMarkMessageAsReadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReceiverMarkMessageAsRead not implemented")
+}
+func (UnimplementedMessageServiceServer) CreateChat(context.Context, *CreateChatRequest) (*CreateChatResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateChat not implemented")
+}
+func (UnimplementedMessageServiceServer) DeleteChat(context.Context, *DeleteChatRequest) (*DeleteChatResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteChat not implemented")
 }
 func (UnimplementedMessageServiceServer) mustEmbedUnimplementedMessageServiceServer() {}
 func (UnimplementedMessageServiceServer) testEmbeddedByValue()                        {}
@@ -266,6 +298,42 @@ func _MessageService_ReceiverMarkMessageAsRead_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MessageService_CreateChat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateChatRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).CreateChat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_CreateChat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).CreateChat(ctx, req.(*CreateChatRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MessageService_DeleteChat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteChatRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServiceServer).DeleteChat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MessageService_DeleteChat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServiceServer).DeleteChat(ctx, req.(*DeleteChatRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MessageService_ServiceDesc is the grpc.ServiceDesc for MessageService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -292,6 +360,14 @@ var MessageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReceiverMarkMessageAsRead",
 			Handler:    _MessageService_ReceiverMarkMessageAsRead_Handler,
+		},
+		{
+			MethodName: "CreateChat",
+			Handler:    _MessageService_CreateChat_Handler,
+		},
+		{
+			MethodName: "DeleteChat",
+			Handler:    _MessageService_DeleteChat_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

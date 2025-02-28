@@ -2081,8 +2081,6 @@ func (s *PostService) GetNewFeeds(ctx context.Context, in *ps.GetNewFeedsRequest
 	interactions := in.Interactions
 	listFriendIds := in.ListFriendIDs
 
-	log.Printf("Original Array: %v", allRankingPost)
-
 	type postScore struct {
 		PostID uint
 		Score  int
@@ -2094,8 +2092,6 @@ func (s *PostService) GetNewFeeds(ctx context.Context, in *ps.GetNewFeedsRequest
 			availablePosts = append(availablePosts, postScore{PostID: uint(postID), Score: score})
 		}
 	}
-
-	log.Printf("Sort Array By Seen: %v", availablePosts)
 
 	for i := 0; i < len(availablePosts); {
 		postID := availablePosts[i].PostID
@@ -2119,20 +2115,16 @@ func (s *PostService) GetNewFeeds(ctx context.Context, in *ps.GetNewFeedsRequest
 		return availablePosts[i].Score > availablePosts[j].Score
 	})
 
-	log.Printf("Sort Array by DESC: %v", availablePosts)
-
 	if uint32(len(availablePosts)) > in.PageSize {
 		availablePosts = availablePosts[:in.PageSize]
 	}
-
-	log.Printf("Sort Array by DESC and get 10 items: %v", availablePosts)
 
 	var responseDisplayPost []*ps.DisplayPost
 
 	for _, post := range availablePosts {
 		postID := post.PostID
 		var postData models.Post
-		if err := s.DB.Model(&models.Post{}).Where("id = ?", postID).First(&postData).Error; err != nil {
+		if err := s.DB.Model(&models.Post{}).Where("id = ? AND is_published = true", postID).First(&postData).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				continue
 			} else {

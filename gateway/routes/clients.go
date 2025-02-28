@@ -101,8 +101,8 @@ func getServiceAddr(serviceName string) string {
 		"notificationService":  "notification_service:50057",
 		"onlineHistoryService": "online_history_service:50058",
 		"otpService":           "otp_service:50059",
-		"postService":          "post_service:50100",
-		"privacyService":       "privacy_service:50900",
+		"postService":          "post_service:51000",
+		"privacyService":       "privacy_service:52000",
 		"userService":          "user_service:50052",
 	}
 

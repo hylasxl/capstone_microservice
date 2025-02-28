@@ -89,8 +89,6 @@ func HandlerSignUp(userClient user_service.UserServiceClient, privacyClient priv
 			return
 		}
 
-		println(request.BirthDate)
-
 		var imgBytes []byte
 		if request.Image != "" {
 			var err error
@@ -156,6 +154,5 @@ func HandlerSignUp(userClient user_service.UserServiceClient, privacyClient priv
 			http.Error(w, "Failed to write response: "+err.Error(), http.StatusInternalServerError)
 		}
 
-		
 	}
 }

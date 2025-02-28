@@ -23,7 +23,7 @@ func main() {
 		return
 	}
 	time.Local = time.FixedZone("UTC+7", 7*3600)
-	lis, err := net.Listen("tcp", ":50100")
+	lis, err := net.Listen("tcp", ":51000")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

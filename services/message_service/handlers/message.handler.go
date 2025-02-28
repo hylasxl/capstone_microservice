@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"io"
 	"log"
 	"message_service/models"
 	ms "message_service/proto/message_service"
@@ -53,45 +52,60 @@ type GetChatListRequest struct {
 func (s *MessageService) ChatStream(stream ms.MessageService_ChatStreamServer) error {
 	var userID uint32
 
+	req, err := stream.Recv()
+	if err != nil {
+		log.Println("Error receiving first message from stream:", err)
+		return err
+	}
+
+	userID = req.SenderID
+	log.Printf("User %d connected to gRPC ChatStream", userID)
+
+	s.mu.Lock()
+	s.streams[userID] = stream
+	s.mu.Unlock()
+
 	for {
 		req, err := stream.Recv()
 		if err != nil {
-			if err == io.EOF {
-				return nil
-			}
-			return err
+			log.Printf("Stream closed for user %d: %v", userID, err)
+			break // Instead of returning, break the loop so cleanup runs
 		}
 
-		userID = req.SenderID
-
-		s.mu.Lock()
-		s.streams[userID] = stream
-		s.mu.Unlock()
-
+		// Store message asynchronously
 		go func() {
-			err := s.storeMessage(req)
+			_, err := s.storeMessage(req)
 			if err != nil {
-				log.Println(err)
+				log.Println("Error storing message:", err)
 			}
 		}()
 
 		s.mu.Lock()
 		receiverStream, exists := s.streams[req.ReceiverID]
 		s.mu.Unlock()
+
 		if exists {
 			err := receiverStream.Send(&ms.ChatMessageReturn{
-				Timestamp: req.Timestamp,
-				Success:   true,
+				Content:    req.Content,
+				ReceiverID: req.ReceiverID,
+				Timestamp:  req.Timestamp,
+				Success:    true,
 			})
 			if err != nil {
 				log.Println("Error sending message to receiver:", err)
 			}
 		} else {
+			log.Println("No receiver ID found, storing as offline message")
 			go s.storeOfflineMessage(req)
 		}
 	}
+
+	// Keep the stream alive instead of returning an error
+	log.Printf("User %d stream ended. Waiting for reconnection...", userID)
+	return nil
 }
-func (s *MessageService) storeMessage(msg *ms.ChatMessage) error {
+
+func (s *MessageService) storeMessage(msg *ms.ChatMessage) (primitive.ObjectID, error) {
 	ctx := context.TODO()
 	db := s.MongoClient.Database("admin")
 
@@ -100,7 +114,7 @@ func (s *MessageService) storeMessage(msg *ms.ChatMessage) error {
 
 	retrievedChat, err := models.FindChatByParticipants(ctx, db, userIDs)
 	if err != nil {
-		return err
+		return primitive.ObjectID{}, err
 	}
 
 	// Convert ChatMessage to Message model
@@ -122,16 +136,16 @@ func (s *MessageService) storeMessage(msg *ms.ChatMessage) error {
 	// Insert message into MongoDB
 	_, err = models.InsertMessage(context.Background(), db, &message)
 	if err != nil {
-		return err
+		return primitive.ObjectID{}, err
 	}
 
 	// Update or create a chat record
 	err = updateOrCreateChat(context.Background(), db, message)
 	if err != nil {
-		return err
+		return primitive.ObjectID{}, err
 	}
 
-	return nil
+	return message.ID, nil
 }
 
 func (s *MessageService) storeOfflineMessage(msg *ms.ChatMessage) {
@@ -175,7 +189,7 @@ func updateOrCreateChat(ctx context.Context, db *mongo.Database, message models.
 	// If no chat exists, create a new one
 	if result.MatchedCount == 0 {
 		chat := models.Chat{
-			Participants:  []uint{message.SenderID, message.ReceiverID},
+			Participants:  []uint32{uint32(message.SenderID), uint32(message.ReceiverID)},
 			LastMessage:   message.Content,
 			LastMessageAt: time.Now(),
 			CreatedAt:     time.Now(),
@@ -213,6 +227,7 @@ func (s *MessageService) GetChatList(ctx context.Context, req *ms.GetChatListReq
 			UnreadMessageQuantity: chat.UnreadMessageQuantity,
 			Page:                  chat.Page,
 			PageSize:              chat.PageSize,
+			Participants:          chat.Participants,
 		})
 	}
 	return response, nil
@@ -304,4 +319,39 @@ func (s *MessageService) ReceiverMarkMessageAsRead(ctx context.Context, req *ms.
 	return &ms.ReceiverMarkMessageAsReadResponse{
 		Success: true,
 	}, nil
+}
+
+func (s *MessageService) CreateChat(ctx context.Context, req *ms.CreateChatRequest) (*ms.CreateChatResponse, error) {
+
+	var participants []uint32
+	participants = append(participants, uint32(req.FirstAccountID), uint32(req.SecondAccountID))
+
+	chat := models.Chat{
+		Participants: participants,
+	}
+
+	insertResult, err := models.CreateChat(ctx, s.MongoClient.Database("admin"), &chat)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ms.CreateChatResponse{
+		ChatID:  insertResult.InsertedID.(primitive.ObjectID).Hex(),
+		Success: true,
+	}
+
+	return response, nil
+}
+
+func (s *MessageService) DeleteChat(ctx context.Context, req *ms.DeleteChatRequest) (*ms.DeleteChatResponse, error) {
+	err := models.DeleteChatByID(ctx, s.MongoClient.Database("admin"), req.ChatID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = models.DeleteMessageByChatID(ctx, s.MongoClient.Database("admin"), req.ChatID)
+	if err != nil {
+		return nil, err
+	}
+	return &ms.DeleteChatResponse{Success: true}, nil
 }

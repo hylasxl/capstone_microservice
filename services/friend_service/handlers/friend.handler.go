@@ -984,3 +984,38 @@ func (svc *FriendService) GetBlockedList(ctx context.Context, in *friend_service
 
 	return &friend_service.BlockListResponse{IDs: blockedByIDs}, nil
 }
+
+func (svc *FriendService) GetBlockListByAccount(ctx context.Context, in *friend_service.GetBlockListByAccountRequest) (*friend_service.GetBlockListByAccountResponse, error) {
+	var blockedAccounts []uint32
+
+	// Query to find accounts blocked by the given account
+	err := svc.DB.Model(&models.FriendBlock{}).
+		Where("first_account_id = ? AND is_blocked = ?", in.AccountID, true).
+		Pluck("second_account_id", &blockedAccounts).Error
+
+	if err != nil {
+		return &friend_service.GetBlockListByAccountResponse{Success: false}, err
+	}
+
+	return &friend_service.GetBlockListByAccountResponse{
+		AccountIDs: blockedAccounts,
+		Success:    true,
+	}, nil
+}
+
+func (svc *FriendService) GetBlockAndBlockedByAccount(ctx context.Context, in *friend_service.GetBlockAndBlockedByAccountRequest) (*friend_service.GetBlockAndBlockedByAccountResponse, error) {
+	var relatedAccounts []uint32
+
+	err := svc.DB.Model(&models.FriendBlock{}).
+		Where("(first_account_id = ? OR second_account_id = ?) AND is_blocked = ?", in.AccountID, in.AccountID, true).
+		Pluck("second_account_id", &relatedAccounts).Error
+
+	if err != nil {
+		return &friend_service.GetBlockAndBlockedByAccountResponse{Success: false}, err
+	}
+
+	return &friend_service.GetBlockAndBlockedByAccountResponse{
+		AccountIDs: relatedAccounts,
+		Success:    true,
+	}, nil
+}

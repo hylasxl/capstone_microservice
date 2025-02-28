@@ -19,22 +19,24 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FriendService_SendFriend_FullMethodName           = "/friend.FriendService/SendFriend"
-	FriendService_ResolveFriendFollow_FullMethodName  = "/friend.FriendService/ResolveFriendFollow"
-	FriendService_ResolveFriendBlock_FullMethodName   = "/friend.FriendService/ResolveFriendBlock"
-	FriendService_GetListFriend_FullMethodName        = "/friend.FriendService/GetListFriend"
-	FriendService_GetPendingList_FullMethodName       = "/friend.FriendService/GetPendingList"
-	FriendService_Unfriend_FullMethodName             = "/friend.FriendService/Unfriend"
-	FriendService_ResolveFriendRequest_FullMethodName = "/friend.FriendService/ResolveFriendRequest"
-	FriendService_RecallFriendRequest_FullMethodName  = "/friend.FriendService/RecallFriendRequest"
-	FriendService_CountPending_FullMethodName         = "/friend.FriendService/CountPending"
-	FriendService_CheckIsFriend_FullMethodName        = "/friend.FriendService/CheckIsFriend"
-	FriendService_CheckIsBlock_FullMethodName         = "/friend.FriendService/CheckIsBlock"
-	FriendService_CheckIsFollow_FullMethodName        = "/friend.FriendService/CheckIsFollow"
-	FriendService_GetUserInteraction_FullMethodName   = "/friend.FriendService/GetUserInteraction"
-	FriendService_CheckExistingRequest_FullMethodName = "/friend.FriendService/CheckExistingRequest"
-	FriendService_GetBlockList_FullMethodName         = "/friend.FriendService/GetBlockList"
-	FriendService_GetBlockedList_FullMethodName       = "/friend.FriendService/GetBlockedList"
+	FriendService_SendFriend_FullMethodName                  = "/friend.FriendService/SendFriend"
+	FriendService_ResolveFriendFollow_FullMethodName         = "/friend.FriendService/ResolveFriendFollow"
+	FriendService_ResolveFriendBlock_FullMethodName          = "/friend.FriendService/ResolveFriendBlock"
+	FriendService_GetListFriend_FullMethodName               = "/friend.FriendService/GetListFriend"
+	FriendService_GetPendingList_FullMethodName              = "/friend.FriendService/GetPendingList"
+	FriendService_Unfriend_FullMethodName                    = "/friend.FriendService/Unfriend"
+	FriendService_ResolveFriendRequest_FullMethodName        = "/friend.FriendService/ResolveFriendRequest"
+	FriendService_RecallFriendRequest_FullMethodName         = "/friend.FriendService/RecallFriendRequest"
+	FriendService_CountPending_FullMethodName                = "/friend.FriendService/CountPending"
+	FriendService_CheckIsFriend_FullMethodName               = "/friend.FriendService/CheckIsFriend"
+	FriendService_CheckIsBlock_FullMethodName                = "/friend.FriendService/CheckIsBlock"
+	FriendService_CheckIsFollow_FullMethodName               = "/friend.FriendService/CheckIsFollow"
+	FriendService_GetUserInteraction_FullMethodName          = "/friend.FriendService/GetUserInteraction"
+	FriendService_CheckExistingRequest_FullMethodName        = "/friend.FriendService/CheckExistingRequest"
+	FriendService_GetBlockList_FullMethodName                = "/friend.FriendService/GetBlockList"
+	FriendService_GetBlockedList_FullMethodName              = "/friend.FriendService/GetBlockedList"
+	FriendService_GetBlockListByAccount_FullMethodName       = "/friend.FriendService/GetBlockListByAccount"
+	FriendService_GetBlockAndBlockedByAccount_FullMethodName = "/friend.FriendService/GetBlockAndBlockedByAccount"
 )
 
 // FriendServiceClient is the client API for FriendService service.
@@ -57,6 +59,8 @@ type FriendServiceClient interface {
 	CheckExistingRequest(ctx context.Context, in *CheckExistingRequestRequest, opts ...grpc.CallOption) (*CheckExistingRequestResponse, error)
 	GetBlockList(ctx context.Context, in *GetBlockListRequest, opts ...grpc.CallOption) (*BlockListResponse, error)
 	GetBlockedList(ctx context.Context, in *GetBlockedListRequest, opts ...grpc.CallOption) (*BlockListResponse, error)
+	GetBlockListByAccount(ctx context.Context, in *GetBlockListByAccountRequest, opts ...grpc.CallOption) (*GetBlockListByAccountResponse, error)
+	GetBlockAndBlockedByAccount(ctx context.Context, in *GetBlockAndBlockedByAccountRequest, opts ...grpc.CallOption) (*GetBlockAndBlockedByAccountResponse, error)
 }
 
 type friendServiceClient struct {
@@ -227,6 +231,26 @@ func (c *friendServiceClient) GetBlockedList(ctx context.Context, in *GetBlocked
 	return out, nil
 }
 
+func (c *friendServiceClient) GetBlockListByAccount(ctx context.Context, in *GetBlockListByAccountRequest, opts ...grpc.CallOption) (*GetBlockListByAccountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBlockListByAccountResponse)
+	err := c.cc.Invoke(ctx, FriendService_GetBlockListByAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *friendServiceClient) GetBlockAndBlockedByAccount(ctx context.Context, in *GetBlockAndBlockedByAccountRequest, opts ...grpc.CallOption) (*GetBlockAndBlockedByAccountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBlockAndBlockedByAccountResponse)
+	err := c.cc.Invoke(ctx, FriendService_GetBlockAndBlockedByAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FriendServiceServer is the server API for FriendService service.
 // All implementations must embed UnimplementedFriendServiceServer
 // for forward compatibility.
@@ -247,6 +271,8 @@ type FriendServiceServer interface {
 	CheckExistingRequest(context.Context, *CheckExistingRequestRequest) (*CheckExistingRequestResponse, error)
 	GetBlockList(context.Context, *GetBlockListRequest) (*BlockListResponse, error)
 	GetBlockedList(context.Context, *GetBlockedListRequest) (*BlockListResponse, error)
+	GetBlockListByAccount(context.Context, *GetBlockListByAccountRequest) (*GetBlockListByAccountResponse, error)
+	GetBlockAndBlockedByAccount(context.Context, *GetBlockAndBlockedByAccountRequest) (*GetBlockAndBlockedByAccountResponse, error)
 	mustEmbedUnimplementedFriendServiceServer()
 }
 
@@ -304,6 +330,12 @@ func (UnimplementedFriendServiceServer) GetBlockList(context.Context, *GetBlockL
 }
 func (UnimplementedFriendServiceServer) GetBlockedList(context.Context, *GetBlockedListRequest) (*BlockListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBlockedList not implemented")
+}
+func (UnimplementedFriendServiceServer) GetBlockListByAccount(context.Context, *GetBlockListByAccountRequest) (*GetBlockListByAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBlockListByAccount not implemented")
+}
+func (UnimplementedFriendServiceServer) GetBlockAndBlockedByAccount(context.Context, *GetBlockAndBlockedByAccountRequest) (*GetBlockAndBlockedByAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBlockAndBlockedByAccount not implemented")
 }
 func (UnimplementedFriendServiceServer) mustEmbedUnimplementedFriendServiceServer() {}
 func (UnimplementedFriendServiceServer) testEmbeddedByValue()                       {}
@@ -614,6 +646,42 @@ func _FriendService_GetBlockedList_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FriendService_GetBlockListByAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBlockListByAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).GetBlockListByAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_GetBlockListByAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).GetBlockListByAccount(ctx, req.(*GetBlockListByAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FriendService_GetBlockAndBlockedByAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBlockAndBlockedByAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).GetBlockAndBlockedByAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_GetBlockAndBlockedByAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).GetBlockAndBlockedByAccount(ctx, req.(*GetBlockAndBlockedByAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FriendService_ServiceDesc is the grpc.ServiceDesc for FriendService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -684,6 +752,14 @@ var FriendService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBlockedList",
 			Handler:    _FriendService_GetBlockedList_Handler,
+		},
+		{
+			MethodName: "GetBlockListByAccount",
+			Handler:    _FriendService_GetBlockListByAccount_Handler,
+		},
+		{
+			MethodName: "GetBlockAndBlockedByAccount",
+			Handler:    _FriendService_GetBlockAndBlockedByAccount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

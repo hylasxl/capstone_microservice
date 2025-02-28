@@ -674,16 +674,17 @@ type MarkAsReadNotiResponse struct {
 }
 
 type ChatList struct {
-	ChatID                string `json:"chat_id"`
-	AccountID             uint64 `json:"account_id"`
-	TargetAccountID       uint64 `json:"target_account_id"`
-	DisplayName           string `json:"display_name"`
-	AvatarURL             string `json:"avatar_url"`
-	LastMessageTimestamp  int64  `json:"last_message_timestamp"`
-	LastMessageContent    string `json:"last_message_content"`
-	UnreadMessageQuantity uint64 `json:"unread_message_quantity"`
-	Page                  uint32 `json:"page"`
-	PageSize              uint32 `json:"page_size"`
+	ChatID                string   `json:"chat_id"`
+	AccountID             uint64   `json:"account_id"`
+	TargetAccountID       uint64   `json:"target_account_id"`
+	DisplayName           string   `json:"display_name"`
+	AvatarURL             string   `json:"avatar_url"`
+	LastMessageTimestamp  int64    `json:"last_message_timestamp"`
+	LastMessageContent    string   `json:"last_message_content"`
+	UnreadMessageQuantity uint64   `json:"unread_message_quantity"`
+	Page                  uint32   `json:"page"`
+	PageSize              uint32   `json:"page_size"`
+	Participants          []uint32 `json:"participants"`
 }
 
 type GetChatListRequest struct {
@@ -970,4 +971,40 @@ type AddWordReq struct {
 	RequestAccountID uint32 `json:"request_account_id"`
 	Content          string `json:"content"`
 	LanguageCode     string `json:"language_code"`
+}
+
+type GetBlockListByAccountRequest struct {
+	AccountID uint32 `json:"account_id"`
+}
+
+type GetBlockListByAccountResponse struct {
+	Accounts []SingleAccountInfo `json:"accounts"`
+	Success  bool                `json:"success"`
+}
+
+type GetBlockAndBlockedByAccountRequest struct {
+	AccountID uint32 `json:"account_id"`
+}
+
+type GetBlockAndBlockedByAccountResponse struct {
+	Accounts []SingleAccountInfo `json:"accounts"`
+	Success  bool                `json:"success"`
+}
+
+type CreateChatRequest struct {
+	FirstAccountID  uint32 `json:"first_account_id"`
+	SecondAccountID uint32 `json:"second_account_id"`
+}
+
+type CreateChatResponse struct {
+	Success bool   `json:"success"`
+	ChatID  string `json:"chat_id"`
+}
+
+type DeleteChatRequest struct {
+	ChatID string `json:"chat_id"`
+}
+
+type DeleteChatResponse struct {
+	Success bool `json:"success"`
 }

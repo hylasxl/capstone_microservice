@@ -13,11 +13,13 @@ func InitializeFriendRoutes(router *mux.Router, clients *ServiceClients) {
 	friendRoutes.HandleFunc("/unfriend", handlers.HandlerUnfriend(clients.FriendService, clients.UserService)).Methods("POST")
 	friendRoutes.HandleFunc("/resolve-follow", handlers.HandlerResolveFollow(clients.FriendService, clients.UserService, clients.NotificationService)).Methods("POST")
 	friendRoutes.HandleFunc("/resolve-block", handlers.HandlerResolveBlock(clients.FriendService, clients.UserService)).Methods("POST")
+	
+	friendRoutes.HandleFunc("/get-block-list-info", handlers.HandlerGetBlockListByAccount(clients.FriendService, clients.UserService)).Methods("GET")
 
-	friendRoutes.HandleFunc("/get-pending-list", handlers.HandlerGetPendingList(clients.FriendService, clients.UserService)).Methods("GET")
-	friendRoutes.HandleFunc("/get-list-friend", handlers.HandlerGetListFriend(clients.FriendService, clients.UserService)).Methods("GET")
-	friendRoutes.HandleFunc("/count-pending-request", handlers.HandlerCountPendingFriendRequest(clients.FriendService, clients.UserService)).Methods("GET")
-	friendRoutes.HandleFunc("/check-existing-request", handlers.HandlerCheckExistingFriendRequest(clients.FriendService)).Methods("GET")
-	friendRoutes.HandleFunc("/check-is-follow", handlers.HandlerCheckIsFollow(clients.FriendService)).Methods("GET")
-	friendRoutes.HandleFunc("/check-is-block", handlers.HandlerCheckIsBlock(clients.FriendService)).Methods("GET")
+	friendRoutes.HandleFunc("/get-pending-list", handlers.HandlerGetPendingList(clients.FriendService, clients.UserService)).Methods("POST")
+	friendRoutes.HandleFunc("/get-list-friend", handlers.HandlerGetListFriend(clients.FriendService, clients.UserService)).Methods("POST")
+	friendRoutes.HandleFunc("/count-pending-request", handlers.HandlerCountPendingFriendRequest(clients.FriendService, clients.UserService)).Methods("POST")
+	friendRoutes.HandleFunc("/check-existing-request", handlers.HandlerCheckExistingFriendRequest(clients.FriendService)).Methods("POST")
+	friendRoutes.HandleFunc("/check-is-follow", handlers.HandlerCheckIsFollow(clients.FriendService)).Methods("POST")
+	friendRoutes.HandleFunc("/check-is-block", handlers.HandlerCheckIsBlock(clients.FriendService)).Methods("POST")
 }

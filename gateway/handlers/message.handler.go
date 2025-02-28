@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"gateway/proto/message_service"
@@ -28,6 +29,9 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+var clientsMutex sync.Mutex
+var userStreamsMutex sync.Mutex
+
 // Redis client
 var redisClient = redis.NewClient(&redis.Options{
 	Addr: "redis:6379",
@@ -38,14 +42,16 @@ var clients = make(map[uint32]*websocket.Conn)
 
 // Message struct
 type Message struct {
+	ID         string
 	SenderId   uint32 `json:"sender_id"`
 	ReceiverId uint32 `json:"receiver_id"`
 	Content    string `json:"content"`
 	Timestamp  int64  `json:"timestamp"`
 }
 
-func HandlerWebSocket(notificationClient notification_service.NotificationServiceClient, messageClient message_service.MessageServiceClient) http.HandlerFunc {
+var userStreams = make(map[uint32]message_service.MessageService_ChatStreamClient)
 
+func HandlerWebSocket(notificationClient notification_service.NotificationServiceClient, messageClient message_service.MessageServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -54,7 +60,7 @@ func HandlerWebSocket(notificationClient notification_service.NotificationServic
 		}
 		defer conn.Close()
 
-		// Get user_id from query params
+		// Extract user ID from query parameters
 		userID := r.URL.Query().Get("user_id")
 		if userID == "" {
 			log.Println("User ID is required")
@@ -71,23 +77,50 @@ func HandlerWebSocket(notificationClient notification_service.NotificationServic
 		uID := uint32(userIDInt)
 
 		// Register user connection
+		clientsMutex.Lock()
 		clients[uID] = conn
+		clientsMutex.Unlock()
+
 		log.Printf("User ID %d connected", uID)
+		log.Printf("Current active WebSocket clients: %v", clients)
 
 		// Deliver offline messages
 		deliverOfflineMessages(uID, conn)
 
-		// Start gRPC chat stream
-		stream, err := messageClient.ChatStream(context.Background())
-		if err != nil {
-			return
-		}
+		// Ensure user has an active gRPC stream
+		userStreamsMutex.Lock()
+		stream, exists := userStreams[uID]
+		if !exists {
+			log.Printf("Creating new gRPC stream for user %d", uID)
+			stream, err = messageClient.ChatStream(context.Background())
+			if err != nil {
+				log.Println("Error creating gRPC stream:", err)
+				return
+			}
+			userStreams[uID] = stream
 
-		// Handle sending and receiving gRPC messages concurrently
-		go handleGRPCStream(messageClient, stream)
+			// Send a registration message to persist user
+			go func() {
+				err := stream.Send(&message_service.ChatMessage{
+					SenderID: uID,
+					Content:  "register",
+				})
+				if err != nil {
+					log.Println("Error registering user to gRPC:", err)
+				}
+			}()
+
+			// Start handling gRPC responses
+			go handleGRPCStream(uID, messageClient, stream)
+		}
+		userStreamsMutex.Unlock()
+
+		// Handle WebSocket messages and cleanup on disconnect
 		handleWebSocketMessages(conn, stream, notificationClient, uID)
+
 	}
 }
+
 func handleWebSocketMessages(conn *websocket.Conn, stream message_service.MessageService_ChatStreamClient, notificationClient notification_service.NotificationServiceClient, senderID uint32) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -98,11 +131,11 @@ func handleWebSocketMessages(conn *websocket.Conn, stream message_service.Messag
 		if err != nil {
 			log.Println("Error closing WebSocket:", err)
 		}
-		delete(clients, senderID) // Remove client on disconnect
+		log.Printf("Removed gRPC stream for user %d", senderID)
 	}()
 
 	for {
-		var msg map[string]interface{} // Generic map for handling different requests
+		var msg map[string]interface{}
 		err := conn.ReadJSON(&msg)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
@@ -110,7 +143,7 @@ func handleWebSocketMessages(conn *websocket.Conn, stream message_service.Messag
 			} else {
 				log.Println("WebSocket Read Error:", err)
 			}
-			break // Exit loop on error
+			break
 		}
 
 		// Check if the message is a request for active users
@@ -139,7 +172,6 @@ func handleWebSocketMessages(conn *websocket.Conn, stream message_service.Messag
 						Timestamp:  timestamp,
 					}
 
-					// Send message via gRPC
 					err = stream.Send(&message_service.ChatMessage{
 						SenderID:   message.SenderId,
 						ReceiverID: message.ReceiverId,
@@ -147,8 +179,8 @@ func handleWebSocketMessages(conn *websocket.Conn, stream message_service.Messag
 						Timestamp:  message.Timestamp,
 					})
 					if err != nil {
-						log.Println("Error sending message to gRPC:", err)
-						break
+						log.Println("Error sending message to gRPC stream:", err)
+						return
 					}
 
 					// Deliver to online users
@@ -166,40 +198,45 @@ func handleWebSocketMessages(conn *websocket.Conn, stream message_service.Messag
 	}
 }
 
-func handleGRPCStream(messageClient message_service.MessageServiceClient, stream message_service.MessageService_ChatStreamClient) {
+func handleGRPCStream(userID uint32, messageClient message_service.MessageServiceClient, stream message_service.MessageService_ChatStreamClient) {
 	for {
-		resp, err := stream.Recv()
+		_, err := stream.Recv()
 		if err == io.EOF {
-			log.Println("gRPC stream closed (EOF). Reconnecting...")
-			time.Sleep(2 * time.Second)
-			newStream, err := messageClient.ChatStream(context.Background())
-			if err != nil {
-				log.Println("Failed to reconnect gRPC stream:", err)
-				time.Sleep(5 * time.Second)
-				continue
-			}
-			stream = newStream
-			continue
+			log.Printf("gRPC stream closed for user %d. Reconnecting...", userID)
+			break // Exit loop and trigger reconnection
 		}
 		if err != nil {
-			log.Println("Error receiving from gRPC stream:", err)
+			log.Printf("Error receiving from gRPC stream for user %d: %v", userID, err)
 			time.Sleep(2 * time.Second)
-			continue
+			break // Exit loop and trigger reconnection
 		}
 
-		// Deliver message if user is online
-		if receiverConn, found := clients[resp.ReceiverID]; found {
-			err = receiverConn.WriteJSON(resp)
-			if err != nil {
-				log.Println("Error sending message to WebSocket user:", err)
-			}
-		} else {
-			// Save to Redis if user is offline
-			ctx := context.Background()
-			msgBytes, _ := json.Marshal(resp)
-			redisClient.RPush(ctx, "offline:"+strconv.FormatUint(uint64(resp.ReceiverID), 10), string(msgBytes))
-		}
 	}
+
+	// **Reconnect the stream after it closes**
+	log.Printf("Reconnecting gRPC stream for user %d...", userID)
+	time.Sleep(2 * time.Second)
+
+	newStream, err := messageClient.ChatStream(context.Background())
+	if err != nil {
+		log.Printf("Failed to reconnect gRPC stream for user %d: %v", userID, err)
+		return
+	}
+	userStreams[userID] = newStream
+
+	// Re-register the user
+	go func() {
+		err := newStream.Send(&message_service.ChatMessage{
+			SenderID: userID,
+			Content:  "register",
+		})
+		if err != nil {
+			log.Println("Error registering user to gRPC after reconnection:", err)
+		}
+	}()
+
+	// **Restart handling the gRPC stream**
+	handleGRPCStream(userID, messageClient, newStream)
 }
 
 func deliverOfflineMessages(userID uint32, conn *websocket.Conn) {
@@ -284,6 +321,7 @@ func HandlerGetChatList(messageClient message_service.MessageServiceClient, user
 				Page:                  chat.Page,
 				PageSize:              chat.PageSize,
 				ChatID:                chat.ChatID,
+				Participants:          chat.Participants,
 			})
 		}
 
@@ -467,4 +505,72 @@ func GetActiveClients() []uint32 {
 	}
 
 	return activeUsers
+}
+
+func HandlerCreateNewChat(messageClient message_service.MessageServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req CreateChatRequest
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid request", nil)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := messageClient.CreateChat(ctx, &message_service.CreateChatRequest{
+			FirstAccountID:  req.FirstAccountID,
+			SecondAccountID: req.SecondAccountID,
+		})
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid request", nil)
+			return
+		}
+
+		var response = &CreateChatResponse{
+			ChatID:  resp.ChatID,
+			Success: resp.Success,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(response)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid response", nil)
+		}
+
+	}
+}
+
+func HandlerDeleteChat(messageClient message_service.MessageServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req DeleteChatRequest
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid request", nil)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := messageClient.DeleteChat(ctx, &message_service.DeleteChatRequest{
+			ChatID: req.ChatID,
+		})
+
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid request", nil)
+			return
+		}
+
+		var response = &DeleteChatResponse{}
+		response.Success = resp.Success
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(response)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid response", nil)
+		}
+	}
 }
